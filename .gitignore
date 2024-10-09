@@ -1,0 +1,4 @@
+# bins output by dlv runs
+__debug_bin*
+# the mailine binary
+adr-er

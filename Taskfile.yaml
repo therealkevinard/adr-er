@@ -1,0 +1,33 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars: { }
+
+tasks:
+  run:
+    desc: run the app. passes extra arguments
+    cmd: go run main.go {{.CLI_ARGS}}
+
+  debug:
+    desc: run the app under dlv. passes extra arguments
+    summary: |
+      runs the app using dlv, allowing interactive debug. 
+      dlv will listen on the provided dlv_port argument (default 4300)
+    vars:
+      dlv_port: '{{ .dlv_port | default 4300 }}'
+    cmd: dlv debug --headless --listen=:{{.dlv_port}} --api-version=2 --accept-multiclient main.go -- {{.CLI_ARGS}}
+
+  build:
+    desc: builds the binary
+    cmd: go build -o adr-er main.go
+
+  cq:
+    desc: uber-common go cq commands
+    cmds:
+      - go mod tidy
+      - go vet ./...
+
+  test:
+    desc: run unit tests
+    cmd: go test ./...
