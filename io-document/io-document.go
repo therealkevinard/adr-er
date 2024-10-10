@@ -6,6 +6,7 @@ import (
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
 	"os"
+	"path"
 )
 
 var _ globals.Validator = (*IODocument)(nil)
@@ -89,12 +90,14 @@ func (cd IODocument) DocumentID() string {
 	return utils.Slugify(cd.Title)
 }
 
-// Write attempts to write the document content to a file on disk.
-// It first validates the document before creating the file.
-// Returns an error if validation or writing fails.
+// Write attempts to write the document content to a file on disk within the directory <inDir>.
+// It first validates the document before creating the file. Returns an error if validation or writing fails.
 // TODO: Ensure the method does not overwrite existing files.
-func (cd *IODocument) Write() error {
+func (cd *IODocument) Write(inDir string) error {
 	var err error
+	if inDir == "" {
+		return globals.ValidationError("directory", "directory is empty")
+	}
 
 	// validate the document before running any io
 	if err = cd.Validate(); err != nil {
@@ -103,7 +106,7 @@ func (cd *IODocument) Write() error {
 
 	// make the file
 	// TODO: make sure this errors if the file already exists. don't want to force-replace existing files.
-	f, err := os.Create(cd.Filename())
+	f, err := os.Create(path.Join(inDir, cd.Filename()))
 	if err != nil {
 		return fmt.Errorf("could not create file %s: %w", cd.Filename(), err)
 	}

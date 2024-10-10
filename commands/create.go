@@ -10,21 +10,59 @@ import (
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
+	"slices"
 )
 
 var _ CliCommand = (*Create)(nil)
 
-type Create struct{}
+type Create struct {
+	// directory to write files into
+	outputDir string
+	// write to stdout, not file
+	outputStdOut bool
+	// user set output directory? false if we used LocateADRDirectory
+	userDefinedOutputDir bool
+	// the next integer sequence for the adrs in this directory
+	nextSequence int
+}
 
-func (n Create) Action(cliCtx *cli.Context) error {
+func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *Create {
+	cmd := &Create{
+		outputDir:            outputDir,
+		userDefinedOutputDir: userDefinedOutputDir,
+		nextSequence:         nextSequence,
+	}
+	// set stdout flag
+	if slices.Contains([]string{"", "-", "/"}, cmd.outputDir) {
+		cmd.outputStdOut = true
+	}
+
+	return cmd
+}
+
+func (n Create) Action(ctx *cli.Context) error {
 	var err error
 
 	// form values
 	confirmed := false
-	record := new(adr.ADR)
+	record := &adr.ADR{
+		Sequence:     n.nextSequence,
+		Title:        "",
+		Context:      "",
+		Decision:     "",
+		Status:       "",
+		Consequences: "",
+	}
 
 	// run with error-or-cancel
 	{
+		var confirmText string
+		if n.outputStdOut {
+			confirmText = fmt.Sprintf("this will flush to stderr")
+		} else {
+			confirmText = fmt.Sprintf("this will create next sequence number %d \nin directory %s", n.nextSequence, n.outputDir)
+		}
+
 		form := huh.NewForm(
 			huh.NewGroup(
 				// title
@@ -62,7 +100,8 @@ func (n Create) Action(cliCtx *cli.Context) error {
 				// confirmation
 				huh.NewConfirm().
 					Value(&confirmed).
-					Title("feeling good about this one?"),
+					Title("feeling good about this one?").
+					Description(confirmText),
 			).Title("The Decision"),
 		).WithTheme(theme.Theme())
 
@@ -76,8 +115,9 @@ func (n Create) Action(cliCtx *cli.Context) error {
 
 	// commit the input
 	{
-		var outputErr error
-		var filename string
+		var outputErr error // captures errors inside the spinner closure
+		var filename string // captures the document filename after it's built
+		var finalMsg string // captures a final message to the user. if writing to stdout, this is the ADR; for file output, it's a friendly status message
 
 		// run load-compile-write under a spinner
 		_ = spinner.New().Title("saving the file").Action(func() {
@@ -97,9 +137,14 @@ func (n Create) Action(cliCtx *cli.Context) error {
 			filename = document.Filename()
 
 			// write the document
-			if writeErr := document.Write(); writeErr != nil {
-				outputErr = fmt.Errorf("error writing document: %w", writeErr)
-				return
+			if !n.outputStdOut {
+				if writeErr := document.Write(n.outputDir); writeErr != nil {
+					outputErr = fmt.Errorf("error writing document: %w", writeErr)
+					return
+				}
+				finalMsg = fmt.Sprintf("wrote ADR to %s", filename)
+			} else {
+				finalMsg = fmt.Sprintf(string(document.Content))
 			}
 		}).Run()
 
@@ -107,9 +152,13 @@ func (n Create) Action(cliCtx *cli.Context) error {
 			return fmt.Errorf("error writing adr document: %w", outputErr)
 		}
 
-		style := theme.TitleStyle()
-		msg := fmt.Sprintf("wrote ADR to %s", filename)
-		fmt.Printf(style.Render(lipgloss.JoinVertical(lipgloss.Left, msg)))
+		// we need different styles if we're writing status vs flushing the whole document
+		// TODO: writing to stdout is a little awkward, still. refine that some other time.
+		if n.outputStdOut {
+			fmt.Printf(lipgloss.NewStyle().Render(finalMsg))
+		} else {
+			fmt.Printf(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
+		}
 	}
 
 	return nil
