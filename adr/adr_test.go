@@ -28,11 +28,12 @@ func TestBuildDocument(t *testing.T) {
 			assertFunc: func(t *testing.T, adr *ADR) {
 				doc, err := adr.BuildDocument(io_document.DocumentFormatMarkdown)
 				require.NoError(t, err)
+
 				assert.Equal(t, "0001: <title>", doc.Title)
-				assert.Equal(t, io_document.DocumentFormatMarkdown, doc.Format)
-				assert.NotEmpty(t, doc.Content)
 				assert.Equal(t, "0001-title", doc.DocumentID())
 				assert.Equal(t, "0001-title.md", doc.Filename())
+				assert.Equal(t, io_document.DocumentFormatMarkdown, doc.Format)
+				assert.NotEmpty(t, doc.Content)
 			},
 		},
 		{
