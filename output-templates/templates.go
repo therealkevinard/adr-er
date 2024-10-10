@@ -9,15 +9,16 @@ import (
 
 var _ globals.Validator = (*ParsedTemplateFile)(nil)
 
-// Templates embeds the *.tpl files in this directory in an embed.FS
-// !!contract: templates should be named `{name}.{format}.tpl`.
-// see parseTemplate for details on the naming convention.
+// Templates embeds the *.tpl files in this directory using an embed.FS.
+// Templates should be named `{name}.{format}.tpl` according to the naming convention.
+// The `go:embed` directive includes all template files matching the pattern.
 //
 //go:embed *.tpl
 var Templates embed.FS
 
-// ListTemplates returns a map[string][]byte index of the available templates.
-// keys are the file paths, and values are the template contents for preview
+// ListTemplates reads all embedded template files and returns a map where keys are template file paths and values are
+// parsed template specifications.
+// The parsed templates contain metadata and content for each file.
 func ListTemplates() (map[string]*ParsedTemplateFile, error) {
 	tpls, err := Templates.ReadDir(".")
 	if err != nil {
@@ -43,8 +44,9 @@ func ListTemplates() (map[string]*ParsedTemplateFile, error) {
 	return index, err
 }
 
-// DefaultTemplateForFormat returns the default template file for a given format. according
-// to the naming convention, default template for (eg) markdown would be named literally "default.markdown.tpl"
+// DefaultTemplateForFormat retrieves the default template for a given DocumentFormat.
+// Default templates are expected to follow the naming pattern "default.{format}.tpl".
+// Returns an error if no template matching the default pattern is found.
 func DefaultTemplateForFormat(format DocumentFormat) (*ParsedTemplateFile, error) {
 	tpls, err := ListTemplates()
 	if err != nil {
@@ -91,9 +93,8 @@ func (t *ParsedTemplateFile) Validate() error {
 	return nil
 }
 
-// parseTemplate parses a template name according to the naming convention, returning its spec.
-// this func returns no errors, only nil.
-// TODO: maybe return errors one day
+// parseTemplate parses a template file name according to the `{name}.{format}.tpl` naming convention.
+// Returns a ParsedTemplateFile with extracted metadata and content, or nil if parsing fails.
 func parseTemplate(filename string) *ParsedTemplateFile {
 	parts := strings.Split(filename, ".")
 	// exactly 3 parts are expected

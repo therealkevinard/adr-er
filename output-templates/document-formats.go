@@ -4,10 +4,12 @@ import "github.com/therealkevinard/adr-er/globals"
 
 var _ globals.Validator = (*DocumentFormat)(nil)
 
-// DocumentFormat is a string alias that constrains allowed formats and simplifies determining the file extension.
+// DocumentFormat defines a supported document format and provides methods for validation and retrieving file
+// extensions.
 type DocumentFormat string
 
-// Validate validates the DocumentFormat, returning errors
+// Validate checks if the DocumentFormat is supported.
+// It returns an error if the format is not recognized.
 func (df DocumentFormat) Validate() error {
 	if _, ok := supportedFormats[df]; !ok {
 		return globals.ValidationError("format", "unsupported format")
@@ -16,7 +18,8 @@ func (df DocumentFormat) Validate() error {
 	return nil
 }
 
-// Extension returns the file extension for this format.
+// Extension returns the file extension associated with the DocumentFormat.
+// If the format is unsupported, it returns "txt" as a safe default.
 func (df DocumentFormat) Extension() string {
 	if ext, ok := supportedFormats[df]; ok {
 		return ext
@@ -26,9 +29,9 @@ func (df DocumentFormat) Extension() string {
 	return "txt"
 }
 
-// this block holds DocumentFormat constants
+// Available DocumentFormat constants for supported document types.
 const (
-	// DocumentFormatMarkdown is a markdown document
+	// DocumentFormatMarkdown represents a markdown document format.
 	DocumentFormatMarkdown DocumentFormat = "markdown"
 )
 

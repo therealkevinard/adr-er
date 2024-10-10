@@ -10,7 +10,8 @@ import (
 	"text/template"
 )
 
-// ADR is an architectural decision record.
+// ADR represents an Architectural Decision Record (ADR).
+// It stores details about decisions made during software architecture design.
 type ADR struct {
 	Sequence     int
 	Title        string
@@ -20,9 +21,9 @@ type ADR struct {
 	Consequences string
 }
 
-// BuildDocument returns a CompiledDocument instance from the ADR.
-// the returned CompiledDocument hold the rendered content and other metadata.
-// it can be written to disk using the CompiledDocument.Write() method
+// BuildDocument creates an IODocument from the ADR using the provided template.
+// It renders the ADR content into the template and returns a document that can be written to disk.
+// Returns an error if rendering fails or if the template is invalid.
 func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFile) (*io_document.IODocument, error) {
 	// render the document, capturing the content return
 	content, err := adr.render(parsedTemplate)
@@ -34,7 +35,8 @@ func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFil
 	return io_document.NewIODocument(parsedTemplate, adr.SequencedTitle(), content)
 }
 
-// SequencedTitle prefixes title with sequence for display
+// SequencedTitle returns the ADR's title prefixed with its sequence number.
+// This is used for display purposes to distinguish between different ADRs.
 func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
 	docTitle.WriteString(utils.PadValue(adr.Sequence, 4))
@@ -44,7 +46,8 @@ func (adr *ADR) SequencedTitle() string {
 	return docTitle.String()
 }
 
-// render renders the document using by inputting the ADR to provided gotemplate, returning the content []byte
+// render processes the ADR through the provided ParsedTemplateFile, generating the rendered content.
+// Returns the rendered content as a byte slice, or an error if the template is invalid or rendering fails.
 func (adr *ADR) render(parsedTemplate *output_templates.ParsedTemplateFile) ([]byte, error) {
 	if err := parsedTemplate.Validate(); err != nil {
 		return nil, fmt.Errorf("refusing to render invalid template: %w", err)
