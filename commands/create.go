@@ -10,6 +10,8 @@ import (
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
+	"os"
+	"path/filepath"
 	"slices"
 )
 
@@ -60,7 +62,25 @@ func (n Create) Action(ctx *cli.Context) error {
 		if n.outputStdOut {
 			confirmText = fmt.Sprintf("this will flush to stderr")
 		} else {
-			confirmText = fmt.Sprintf("this will create next sequence number %d \nin directory %s", n.nextSequence, n.outputDir)
+			// a simple inline to dompute a relative path. if it errors, just show the abs path
+			displayPath := func() string {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return ""
+				}
+				rel, err := filepath.Rel(cwd, n.outputDir)
+				if err != nil {
+					return ""
+				}
+
+				return rel
+			}()
+
+			if displayPath == "" {
+				displayPath = n.outputDir
+			}
+
+			confirmText = fmt.Sprintf("this will create next sequence number %d \nin %s", n.nextSequence, displayPath)
 		}
 
 		form := huh.NewForm(
