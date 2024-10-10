@@ -1,6 +1,6 @@
-package adr
+package io_document
 
-// DocumentFormat is a string alias that constrains allowed formats and simplifies determining the file extension
+// DocumentFormat is a string alias that constrains allowed formats and simplifies determining the file extension.
 type DocumentFormat string
 
 // Valid tests the DocumentFormat is a supportedFormats
@@ -9,8 +9,8 @@ func (df DocumentFormat) Valid() bool {
 	return ok
 }
 
-// GetExtension returns the file extension.
-func (df DocumentFormat) GetExtension() string {
+// Extension returns the file extension for this format.
+func (df DocumentFormat) Extension() string {
 	if ext, ok := supportedFormats[df]; ok {
 		return ext
 	}

@@ -22,11 +22,21 @@ tasks:
     desc: builds the binary
     cmd: go build -o adr-er main.go
 
+  pre-push:
+    desc: test/cq before pushing
+    cmds:
+      - task: cq
+      - task: test
+
   cq:
     desc: uber-common go cq commands
     cmds:
       - go mod tidy
-      - go vet ./...
+      - task: vet
+
+  vet:
+    desc: run go vet
+    cmd: go vet ./...
 
   test:
     desc: run unit tests
