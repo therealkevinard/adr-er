@@ -3,38 +3,15 @@ package adr
 import (
 	"bytes"
 	"fmt"
-	"github.com/therealkevinard/adr-er/globals"
 	io_document "github.com/therealkevinard/adr-er/io-document"
+	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
 	"strings"
 	"text/template"
 )
 
-// renderTemplateStyleMarkdown holds the gotemplate to render an ADR as markdown.
-// TODO(reminder): to support edit/update, this format needs to be parseable into structured data.
-const renderTemplateStyleMarkdown = `
-{{.Title}} 
---- 
-
-## Status: {{.Status}}
-
-## Context  
-{{.Context}}
-
-## Decision  
-{{.Decision}}
-
-## Consequences  
-{{.Consequences}}
-`
-
-// defaultTemplatesMap maps DocumentFormat to a gotemplate.
-// overkill as long as we only have markdown, but great when we add whatever else.
-var defaultTemplatesMap = map[io_document.DocumentFormat]string{
-	io_document.DocumentFormatMarkdown: renderTemplateStyleMarkdown,
-}
-
-// ADR is an architectural decision record.
+// ADR represents an Architectural Decision Record (ADR).
+// It stores details about decisions made during software architecture design.
 type ADR struct {
 	Sequence     int
 	Title        string
@@ -44,52 +21,47 @@ type ADR struct {
 	Consequences string
 }
 
-// BuildDocument returns a CompiledDocument instance from the ADR.
-// the returned CompiledDocument hold the rendered content and other metadata.
-// it can be written to disk using the CompiledDocument.Write() method
-func (adr *ADR) BuildDocument(format io_document.DocumentFormat) (*io_document.IODocument, error) {
-	// validate input
-	if valid := format.Valid(); !valid {
-		return nil, globals.ValidationError("format", "invalid format provided")
-	}
-
+// BuildDocument creates an IODocument from the ADR using the provided template.
+// It renders the ADR content into the template and returns a document that can be written to disk.
+// Returns an error if rendering fails or if the template is invalid.
+func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFile) (*io_document.IODocument, error) {
 	// render the document, capturing the content return
-	// ... choose a template
-	tpl, ok := defaultTemplatesMap[format]
-	if !ok {
-		return nil, globals.TemplateNotFoundError{Requested: string(format)}
-	}
-	// ... render it
-	content, err := adr.render(tpl)
+	content, err := adr.render(parsedTemplate)
 	if err != nil {
-		return nil, fmt.Errorf("error rendering document: %w", err)
+		return nil, fmt.Errorf("error rendering ADR: %w", err)
 	}
 
-	// build document title: `{padded sequence}: {title}`
+	// return the writeable document
+	return io_document.NewIODocument(parsedTemplate, adr.SequencedTitle(), content)
+}
+
+// SequencedTitle returns the ADR's title prefixed with its sequence number.
+// This is used for display purposes to distinguish between different ADRs.
+func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
 	docTitle.WriteString(utils.PadValue(adr.Sequence, 4))
 	docTitle.WriteString(": ")
 	docTitle.WriteString(adr.Title)
 
-	// return the writeable document
-	return io_document.NewIODocument(format, docTitle.String(), content)
+	return docTitle.String()
 }
 
-// render renders the document using by inputting the adr to provided gotemplate, returning the content []byte
-func (adr *ADR) render(tpl string) ([]byte, error) {
-	var err error
+// render processes the ADR through the provided ParsedTemplateFile, generating the rendered content.
+// Returns the rendered content as a byte slice, or an error if the template is invalid or rendering fails.
+func (adr *ADR) render(parsedTemplate *output_templates.ParsedTemplateFile) ([]byte, error) {
+	if err := parsedTemplate.Validate(); err != nil {
+		return nil, fmt.Errorf("refusing to render invalid template: %w", err)
+	}
 
-	// parse the tpl
-	tmpl, err := template.New("adr-doc-tpl").Parse(tpl)
+	tpl, err := template.New(parsedTemplate.ID).Parse(string(parsedTemplate.Content))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing template: %w", err)
+		return nil, fmt.Errorf("error preparing template: %w", err)
 	}
 
-	// execute and return
-	var result bytes.Buffer
-	if err = tmpl.Execute(&result, adr); err != nil {
-		return nil, fmt.Errorf("error executing template: %w", err)
+	var content bytes.Buffer
+	if err = tpl.Execute(&content, adr); err != nil {
+		return nil, fmt.Errorf("error rendering document: %w", err)
 	}
 
-	return result.Bytes(), nil
+	return content.Bytes(), nil
 }

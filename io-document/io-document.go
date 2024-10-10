@@ -3,32 +3,36 @@ package io_document
 import (
 	"fmt"
 	"github.com/therealkevinard/adr-er/globals"
+	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
 	"os"
 )
 
-// IODocument supports filesystem io.
-// It exports methods for deriving the filename, validation, and actual filesystem IO.
+var _ globals.Validator = (*IODocument)(nil)
+
+// IODocument represents a document that is templated and prepared for filesystem operations.
+// It provides methods for validation, deriving filenames, and writing content to disk.
 type IODocument struct {
 	// Title is the document title. it's mostly used for presentation. business logic relies on DocumentID, which is derived from Title.
 	Title string
-	// Format is the document format
-	Format DocumentFormat
 	// Content is the literal content of the document
 	Content []byte
+	// Template holds the parsed template, containing file metadata
+	Template *output_templates.ParsedTemplateFile
 }
 
-// NewIODocument returns a IODocument using provided format, title, and content.
-// the created document is validated before returning. only a valid document is returned.
-func NewIODocument(format DocumentFormat, title string, content []byte) (*IODocument, error) {
-	if title == "" || !format.Valid() || len(content) == 0 {
-		return nil, globals.ValidationError("", "")
+// NewIODocument creates a new IODocument with the given parsed template, title, and content.
+// It validates the provided template and document before returning.
+// Returns an error if validation fails.
+func NewIODocument(parsedTemplate *output_templates.ParsedTemplateFile, title string, content []byte) (*IODocument, error) {
+	if err := parsedTemplate.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid template. refusing IODocument: %w", err)
 	}
 
 	cd := &IODocument{
-		Title:   title,
-		Format:  format,
-		Content: content,
+		Title:    title,
+		Template: parsedTemplate,
+		Content:  content,
 	}
 	if err := cd.Validate(); err != nil {
 		return nil, fmt.Errorf("refusing to create invalid document: %w", err)
@@ -37,12 +41,12 @@ func NewIODocument(format DocumentFormat, title string, content []byte) (*IODocu
 	return cd, nil
 }
 
-// Validate checks several properties of IODocument, returning errors on failure.
-// many validations are consolidated here, so many operations can be gated behind this one validator
+// Validate checks the properties of an IODocument, including title, content, and template metadata.
+// Returns an error if any of the required properties are missing or invalid.
 func (cd *IODocument) Validate() error {
-	// requested form validation
-	if validFmt := cd.Format.Valid(); !validFmt {
-		return globals.ValidationError("format", "invalid format provided")
+	// base template
+	if err := cd.Template.Validate(); err != nil {
+		return globals.ValidationError("template", err.Error())
 	}
 
 	// file body validations
@@ -63,7 +67,7 @@ func (cd *IODocument) Validate() error {
 		if cd.DocumentID() == "" {
 			return globals.ValidationError("documentID", "can't create valid document id from title")
 		}
-		if cd.Format.Extension() == "" {
+		if cd.Template.Format.Extension() == "" {
 			return globals.ValidationError("extension", "can't create valid document extension")
 		}
 		if cd.Filename() == "" {
@@ -77,7 +81,7 @@ func (cd *IODocument) Validate() error {
 // Filename is a getter for the derived filename
 // filename is built from sluggified title and format's extension.
 func (cd IODocument) Filename() string {
-	return cd.DocumentID() + "." + cd.Format.Extension()
+	return cd.DocumentID() + "." + cd.Template.Format.Extension()
 }
 
 // DocumentID is a getter for the derived document id. returns the slugified title
@@ -85,7 +89,10 @@ func (cd IODocument) DocumentID() string {
 	return utils.Slugify(cd.Title)
 }
 
-// Write flushes the document to filesystem
+// Write attempts to write the document content to a file on disk.
+// It first validates the document before creating the file.
+// Returns an error if validation or writing fails.
+// TODO: Ensure the method does not overwrite existing files.
 func (cd *IODocument) Write() error {
 	var err error
 
