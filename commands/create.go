@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/therealkevinard/adr-er/adr"
+	"github.com/therealkevinard/adr-er/io-document"
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
@@ -78,7 +79,7 @@ func (n Create) Action(cliCtx *cli.Context) error {
 		var outputErr error
 
 		// compile the doc. this renders the md template and returns a CompiledDocument instance that can be flushed to disk
-		document, outputErr := record.CompileDocument(adr.DocumentFormatMarkdown)
+		document, outputErr := record.BuildDocument(io_document.DocumentFormatMarkdown)
 		if outputErr != nil {
 			return fmt.Errorf("error rendering document: %w", outputErr)
 		}

@@ -1,62 +1,64 @@
 package adr
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/therealkevinard/adr-er/globals"
+	io_document "github.com/therealkevinard/adr-er/io-document"
 	"testing"
 )
 
-// TestDocumentTitle provides coverage of ADR.documentID in many scenarios
-func TestDocumentTitle(t *testing.T) {
+func TestBuildDocument(t *testing.T) {
 	tests := []struct {
-		name              string
-		wantDocumentTitle string
-		input             ADR
+		name       string
+		adr        *ADR
+		assertFunc func(t *testing.T, adr *ADR)
 	}{
 		{
-			name:              "basic",
-			wantDocumentTitle: "001_fizzy-pop",
-			input: ADR{
-				Sequence: 1,
-				Title:    "Fizzy Pop",
+			name: "happy path",
+			adr: &ADR{
+				Sequence:     1,
+				Title:        "<title>",
+				Context:      "<context>",
+				Decision:     "<decision>",
+				Status:       "<status>",
+				Consequences: "<consequences>",
+			},
+			assertFunc: func(t *testing.T, adr *ADR) {
+				doc, err := adr.BuildDocument(io_document.DocumentFormatMarkdown)
+				require.NoError(t, err)
+				assert.Equal(t, "0001: <title>", doc.Title)
+				assert.Equal(t, io_document.DocumentFormatMarkdown, doc.Format)
+				assert.NotEmpty(t, doc.Content)
+				assert.Equal(t, "0001-title", doc.DocumentID())
+				assert.Equal(t, "0001-title.md", doc.Filename())
 			},
 		},
 		{
-			name:              "many spaces",
-			wantDocumentTitle: "001_fizzy-pop",
-			input: ADR{
+			name: "invalid format",
+			adr: &ADR{
 				Sequence: 1,
-				Title:    "Fizzy                 Pop",
+				Title:    "<title>",
 			},
-		},
-		{
-			name:              "leading-trailing whsp",
-			wantDocumentTitle: "001_fizzy-pop",
-			input: ADR{
-				Sequence: 1,
-				Title:    "   Fizzy Pop   ",
-			},
-		},
-		{
-			name:              "unsafe characters",
-			wantDocumentTitle: "001_fizzy-pop",
-			input: ADR{
-				Sequence: 1,
-				Title:    "Fiz*zy P\\o/p",
-			},
-		},
-		{
-			name:              "one-indexed",
-			wantDocumentTitle: "001_fizzy-pop",
-			input: ADR{
-				Sequence: 0,
-				Title:    "Fizzy Pop",
+			assertFunc: func(t *testing.T, adr *ADR) {
+				doc, err := adr.BuildDocument(io_document.DocumentFormat("invalid"))
+				assert.Nil(t, doc)
+				assert.Error(t, err)
+
+				// assert against the returned descriptive error
+				var validationError globals.InputValidationError
+				ok := errors.As(err, &validationError)
+				assert.True(t, ok)
+				assert.Equal(t, "format", validationError.Field)
+				assert.Equal(t, "invalid format provided", validationError.Reason)
+
 			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := test.input.documentID()
-			assert.Equal(t, test.wantDocumentTitle, got)
+			test.assertFunc(t, test.adr)
 		})
 	}
 }

@@ -9,6 +9,3 @@ type CliCommand interface {
 	// Action satisfies
 	Action(cliCtx *cli.Context) error
 }
-
-// Validator is used for form validation
-type Validator func(string) error
