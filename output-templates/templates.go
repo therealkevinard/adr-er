@@ -3,9 +3,11 @@ package output_templates
 import (
 	"embed"
 	"fmt"
-	io_document "github.com/therealkevinard/adr-er/io-document"
+	"github.com/therealkevinard/adr-er/globals"
 	"strings"
 )
+
+var _ globals.Validator = (*ParsedTemplateFile)(nil)
 
 // Templates embeds the *.tpl files in this directory in an embed.FS
 // !!contract: templates should be named `{name}.{format}.tpl`.
@@ -43,17 +45,13 @@ func ListTemplates() (map[string]*ParsedTemplateFile, error) {
 
 // DefaultTemplateForFormat returns the default template file for a given format. according
 // to the naming convention, default template for (eg) markdown would be named literally "default.markdown.tpl"
-func DefaultTemplateForFormat(format io_document.DocumentFormat) (*ParsedTemplateFile, error) {
+func DefaultTemplateForFormat(format DocumentFormat) (*ParsedTemplateFile, error) {
 	tpls, err := ListTemplates()
 	if err != nil {
 		return nil, fmt.Errorf("error listing templates: %w", err)
 	}
 
-	defaultName := strings.Join([]string{
-		"default",
-		string(format),
-		"tpl",
-	}, ".")
+	defaultName := strings.Join([]string{"default", string(format), "tpl"}, ".")
 
 	v, ok := tpls[defaultName]
 	if !ok {
@@ -63,13 +61,34 @@ func DefaultTemplateForFormat(format io_document.DocumentFormat) (*ParsedTemplat
 	return v, nil
 }
 
-// ParsedTemplateFile unpacks the name and format from the template filename and joins with its content
+// ParsedTemplateFile unpacks the name and format from the template filename and joins with its content.
+// once constructed, downstream business logic is entirely decoupled from the filesystem
 type ParsedTemplateFile struct {
 	ID     string
-	Format io_document.DocumentFormat
+	Format DocumentFormat
 
 	Name    string
 	Content []byte
+}
+
+func (t *ParsedTemplateFile) Validate() error {
+	// nested validators
+	if err := t.Format.Validate(); err != nil {
+		return fmt.Errorf("invalid ouput format: %w", err)
+	}
+
+	// self validators
+	if t.ID == "" {
+		return globals.ValidationError("id", "empty template id")
+	}
+	if t.Name == "" {
+		return globals.ValidationError("name", "empty name")
+	}
+	if len(t.Content) == 0 {
+		return globals.ValidationError("content", "empty content")
+	}
+
+	return nil
 }
 
 // parseTemplate parses a template name according to the naming convention, returning its spec.
@@ -84,18 +103,18 @@ func parseTemplate(filename string) *ParsedTemplateFile {
 
 	parsed := &ParsedTemplateFile{
 		ID:     parts[0],
-		Format: io_document.DocumentFormat(parts[1]),
+		Format: DocumentFormat(parts[1]),
 		Name:   filename,
-	}
-
-	// invalid, continue
-	if !parsed.Format.Valid() || parsed.ID == "" {
-		return nil
 	}
 
 	var err error
 	if parsed.Content, err = Templates.ReadFile(parsed.Name); err != nil {
 		// error reading, continue
+		return nil
+	}
+
+	// invalid, continue
+	if err = parsed.Validate(); err != nil {
 		return nil
 	}
 

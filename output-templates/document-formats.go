@@ -1,12 +1,19 @@
-package io_document
+package output_templates
+
+import "github.com/therealkevinard/adr-er/globals"
+
+var _ globals.Validator = (*DocumentFormat)(nil)
 
 // DocumentFormat is a string alias that constrains allowed formats and simplifies determining the file extension.
 type DocumentFormat string
 
-// Valid tests the DocumentFormat is a supportedFormats
-func (df DocumentFormat) Valid() bool {
-	_, ok := supportedFormats[df]
-	return ok
+// Validate validates the DocumentFormat, returning errors
+func (df DocumentFormat) Validate() error {
+	if _, ok := supportedFormats[df]; !ok {
+		return globals.ValidationError("format", "unsupported format")
+	}
+
+	return nil
 }
 
 // Extension returns the file extension for this format.

@@ -3,7 +3,6 @@ package output_templates
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	io_document "github.com/therealkevinard/adr-er/io-document"
 	"path"
 	"testing"
 )
@@ -14,13 +13,13 @@ func TestListTemplates(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tpls)
 
-	found, err := DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+	found, err := DefaultTemplateForFormat(DocumentFormatMarkdown)
 	require.NoError(t, err)
 	require.NotNil(t, found)
 
 	assert.NotNil(t, found)
 	assert.Equal(t, "default.markdown.tpl", found.Name)
-	assert.Equal(t, io_document.DocumentFormatMarkdown, found.Format)
+	assert.Equal(t, DocumentFormatMarkdown, found.Format)
 	assert.Equal(t, "default", found.ID)
 }
 

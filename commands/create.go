@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/therealkevinard/adr-er/adr"
-	"github.com/therealkevinard/adr-er/io-document"
+	io_document "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
@@ -77,26 +77,39 @@ func (n Create) Action(cliCtx *cli.Context) error {
 	// commit the input
 	{
 		var outputErr error
+		var filename string
 
-		// compile the doc. this renders the md template and returns a CompiledDocument instance that can be flushed to disk
-		document, outputErr := record.BuildDocument(io_document.DocumentFormatMarkdown)
-		if outputErr != nil {
-			return fmt.Errorf("error rendering document: %w", outputErr)
-		}
-
-		// write the file
+		// run load-compile-write under a spinner
 		_ = spinner.New().Title("saving the file").Action(func() {
-			outputErr = document.Write()
+			// load the template
+			tpl, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+			if tplErr != nil {
+				outputErr = fmt.Errorf("error finding template: %w", tplErr)
+				return
+			}
+
+			// build the document
+			document, buildErr := record.BuildDocument(tpl)
+			if buildErr != nil {
+				outputErr = fmt.Errorf("error rendering document: %w", buildErr)
+				return
+			}
+			filename = document.Filename()
+
+			// write the document
+			if writeErr := document.Write(); writeErr != nil {
+				outputErr = fmt.Errorf("error writing document: %w", writeErr)
+				return
+			}
 		}).Run()
+
 		if outputErr != nil {
 			return fmt.Errorf("error writing adr document: %w", outputErr)
 		}
 
-		msg := fmt.Sprintf("wrote ADR to %s", document.Filename())
-		fmt.Printf(
-			theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, msg)),
-		)
-
+		style := theme.TitleStyle()
+		msg := fmt.Sprintf("wrote ADR to %s", filename)
+		fmt.Printf(style.Render(lipgloss.JoinVertical(lipgloss.Left, msg)))
 	}
 
 	return nil
