@@ -14,7 +14,7 @@ import (
 // defaultTemplatesMap maps DocumentFormat to a gotemplate.
 // overkill as long as we only have markdown, but great when we add whatever else.
 var defaultTemplatesMap = map[io_document.DocumentFormat]string{
-	io_document.DocumentFormatMarkdown: "adr-markdown-001.md.tpl",
+	io_document.DocumentFormatMarkdown: "default.markdown.tpl",
 }
 
 // ADR is an architectural decision record.

@@ -3,18 +3,25 @@ package output_templates
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	io_document "github.com/therealkevinard/adr-er/io-document"
 	"path"
 	"testing"
 )
 
-// asserts fundamental behavior of the template list
+// asserts fundamental behavior of ListTemplates, parseTemplate, and DefaultTemplateForFormat
 func TestListTemplates(t *testing.T) {
 	tpls, err := ListTemplates()
 	require.NoError(t, err)
 	require.NotNil(t, tpls)
 
-	defaultTmpl := tpls["adr-markdown-001.md.tpl"]
-	assert.NotEmpty(t, defaultTmpl)
+	found, err := DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+	require.NoError(t, err)
+	require.NotNil(t, found)
+
+	assert.NotNil(t, found)
+	assert.Equal(t, "default.markdown.tpl", found.Name)
+	assert.Equal(t, io_document.DocumentFormatMarkdown, found.Format)
+	assert.Equal(t, "default", found.ID)
 }
 
 // ensures embed.FS contains only .tpl files (eg: no .go files)
