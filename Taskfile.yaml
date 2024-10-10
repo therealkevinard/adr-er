@@ -41,3 +41,9 @@ tasks:
   test:
     desc: run unit tests
     cmd: go test ./...
+
+  demo:
+    desc: updates the gif demo(s)
+    cmds:
+      - task: build
+      - vhs doc/demo/demo-create.tape
