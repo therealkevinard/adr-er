@@ -44,6 +44,7 @@ func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFil
 // This is used for display purposes to distinguish between different ADRs.
 func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
+
 	docTitle.WriteString(utils.PadValue(adr.Sequence, numericPadWidth))
 	docTitle.WriteString(": ")
 	docTitle.WriteString(adr.Title)

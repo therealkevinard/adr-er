@@ -10,6 +10,14 @@ import (
 
 var _ globals.Validator = (*ParsedTemplateFile)(nil)
 
+type TemplateNotFoundError struct {
+	TemplateName string
+}
+
+func (e TemplateNotFoundError) Error() string {
+	return fmt.Sprintf("template %s not found", e.TemplateName)
+}
+
 // Templates embeds the *.tpl files in this directory using an embed.FS.
 // Templates should be named `{name}.{format}.tpl` according to the naming convention.
 // The `go:embed` directive includes all template files matching the pattern.
@@ -27,6 +35,7 @@ func ListTemplates() (map[string]*ParsedTemplateFile, error) {
 	}
 
 	index := make(map[string]*ParsedTemplateFile, len(tpls))
+
 	for _, tpl := range tpls {
 		// no nested files are allowed
 		if tpl.IsDir() {
@@ -58,7 +67,7 @@ func DefaultTemplateForFormat(format DocumentFormat) (*ParsedTemplateFile, error
 
 	v, ok := tpls[defaultName]
 	if !ok {
-		return nil, fmt.Errorf("template %q not found", defaultName)
+		return nil, TemplateNotFoundError{TemplateName: defaultName}
 	}
 
 	return v, nil
@@ -84,9 +93,11 @@ func (t *ParsedTemplateFile) Validate() error {
 	if t.ID == "" {
 		return globals.ValidationError("id", "empty template id")
 	}
+
 	if t.Name == "" {
 		return globals.ValidationError("name", "empty name")
 	}
+
 	if len(t.Content) == 0 {
 		return globals.ValidationError("content", "empty content")
 	}

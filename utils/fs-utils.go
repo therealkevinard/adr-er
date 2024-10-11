@@ -39,25 +39,23 @@ func LocateADRDirectory(root string) (string, error) {
 	// evaluate each candidate directory. the first one that passes the rules is used
 	for _, dir := range candidates {
 		candidatePath := filepath.Join(root, dir)
-		ok, err := evaluateCandidate(candidatePath)
-		if err != nil {
-			continue
-		}
-		// this one wins
-		if ok {
+
+		// found a winner
+		if ok, err := evaluateCandidate(candidatePath); ok && err == nil {
 			return candidatePath, nil
 		}
 
 		continue
 	}
 
-	return "", fmt.Errorf("no ADR directory found in %s", root)
+	return "", globals.ValidationError("adrDirectory", fmt.Sprintf("no viable ADR directory found under %s", root))
 }
 
 // GetHighestSequenceNumber reads the filenames in root, extracting the ADR sequence number.
 // The highest existing value is returned.
 func GetHighestSequenceNumber(root string) (int, error) {
 	highest := 0
+
 	if root == "" {
 		return 0, globals.ValidationError("directory", "directory path is empty")
 	}
@@ -111,6 +109,7 @@ func DisplayShortpath(absolutePath string) (string, error) {
 	if cwd, err = os.Getwd(); err != nil {
 		return absolutePath, fmt.Errorf("error getting current working directory: %w", err)
 	}
+
 	if relativePath, err = filepath.Rel(cwd, absolutePath); err != nil {
 		return absolutePath, fmt.Errorf("error getting relative path: %w", err)
 	}

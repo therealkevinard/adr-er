@@ -121,6 +121,7 @@ func TestValidate(t *testing.T) {
 				"test content",
 				testBreakValidTemplate(t, func(tpl *output_templates.ParsedTemplateFile) *output_templates.ParsedTemplateFile {
 					tpl.Format = output_templates.DocumentFormat("<invalid>")
+
 					return tpl
 				}),
 			),
@@ -163,5 +164,6 @@ func testBreakValidTemplate(
 	t.Helper()
 
 	valid := testGetDefaultTemplate(t)
+
 	return breakFunc(valid)
 }

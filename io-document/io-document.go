@@ -75,9 +75,11 @@ func (cd *IODocument) Validate() error {
 		if cd.DocumentID() == "" {
 			return globals.ValidationError("documentID", "can't create valid document id from title")
 		}
+
 		if cd.Template.Format.Extension() == "" {
 			return globals.ValidationError("extension", "can't create valid document extension")
 		}
+
 		if cd.Filename() == "" {
 			return globals.ValidationError("filename", "can't create valid document filename")
 		}
@@ -102,6 +104,7 @@ func (cd IODocument) DocumentID() string {
 // TODO: Ensure the method does not overwrite existing files.
 func (cd *IODocument) Write(inDir string) error {
 	var err error
+
 	if inDir == "" {
 		return globals.ValidationError("directory", "directory is empty")
 	}

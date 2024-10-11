@@ -113,6 +113,7 @@ func (n Create) Action(_ *cli.Context) error {
 		if err = form.Run(); err != nil {
 			return fmt.Errorf("error running form: %w", err)
 		}
+
 		if !confirmed {
 			theme.RenderCancelMessage()
 		}
@@ -134,6 +135,7 @@ func (n Create) Action(_ *cli.Context) error {
 			tpl, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
 			if tplErr != nil {
 				outputErr = fmt.Errorf("error finding template: %w", tplErr)
+
 				return
 			}
 
@@ -141,6 +143,7 @@ func (n Create) Action(_ *cli.Context) error {
 			document, buildErr := record.BuildDocument(tpl)
 			if buildErr != nil {
 				outputErr = fmt.Errorf("error rendering document: %w", buildErr)
+
 				return
 			}
 			filename = document.Filename()
@@ -149,6 +152,7 @@ func (n Create) Action(_ *cli.Context) error {
 			if !n.outputStdOut {
 				if writeErr := document.Write(n.outputDir); writeErr != nil {
 					outputErr = fmt.Errorf("error writing document: %w", writeErr)
+
 					return
 				}
 
