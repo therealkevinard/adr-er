@@ -9,12 +9,11 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/urfave/cli/v2"
-
 	"github.com/therealkevinard/adr-er/adr"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
+	"github.com/urfave/cli/v2"
 )
 
 var _ CliCommand = (*Create)(nil)
