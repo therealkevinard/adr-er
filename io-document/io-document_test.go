@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/therealkevinard/adr-er/globals"
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 )

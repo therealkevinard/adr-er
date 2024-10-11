@@ -6,9 +6,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/therealkevinard/adr-er/commands"
 	"github.com/therealkevinard/adr-er/utils"
-	"github.com/urfave/cli/v2"
 )
 
 func main() {
