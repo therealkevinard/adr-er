@@ -34,6 +34,20 @@ tasks:
       - go mod tidy
       - task: vet
 
+  lint:
+    desc: runs the common case of golangci-lint
+    cmd: golangci-lint run
+
+  lint:single:
+    desc: runs a single, specific linter
+    summary: |
+      runs golangci-lint with all disabled and config ignored, passing extra args to the --enable flag 
+      usage ex, run only the lll linter:  
+        $ task lint:single -- lll
+      usage ex, run godo with fix mode: 
+        $ task lint:single -- godot --fix
+    cmd: golangci-lint run --no-config --disable-all --enable {{.CLI_ARGS}}
+
   vet:
     desc: run go vet
     cmd: go vet ./...
