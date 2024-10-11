@@ -6,7 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/therealkevinard/adr-er/commands"
+	"github.com/therealkevinard/adr-er/commands/create"
+	"github.com/therealkevinard/adr-er/commands/view"
 	"github.com/therealkevinard/adr-er/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -71,7 +72,7 @@ if provided:
 
 					// for sout, we can finish early
 					if outputDir == "-" {
-						return commands.NewCreate(outputDir, userDefinedOutputDir, 0).Action(ctx)
+						return create.NewCommand(outputDir, userDefinedOutputDir, 0).Action(ctx)
 					}
 
 					// normalize absolute path
@@ -90,7 +91,7 @@ if provided:
 					currentSequence, _ := utils.GetHighestSequenceNumber(outputDir)
 					nextSequence = currentSequence + 1
 
-					createCommand := commands.NewCreate(outputDir, userDefinedOutputDir, nextSequence)
+					createCommand := create.NewCommand(outputDir, userDefinedOutputDir, nextSequence)
 
 					return createCommand.Action(ctx)
 				},
@@ -101,7 +102,7 @@ if provided:
 				Description: "runs a tui application for reading historical ADRs",
 				Action: func(ctx *cli.Context) error {
 					adrDir := "/Users/kard/Workspaces/github.com/therealkevinard/adr-er/architectural-decision-records"
-					viewCommand := commands.NewView(adrDir)
+					viewCommand := view.NewCommand(adrDir)
 
 					return viewCommand.Action(ctx)
 				},
