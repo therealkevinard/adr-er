@@ -2,11 +2,12 @@ package io_document
 
 import (
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/therealkevinard/adr-er/globals"
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
-	"os"
-	"path"
 )
 
 var _ globals.Validator = (*IODocument)(nil)
@@ -14,7 +15,8 @@ var _ globals.Validator = (*IODocument)(nil)
 // IODocument represents a document that is templated and prepared for filesystem operations.
 // It provides methods for validation, deriving filenames, and writing content to disk.
 type IODocument struct {
-	// Title is the document title. it's mostly used for presentation. business logic relies on DocumentID, which is derived from Title.
+	// Title is the document title.
+	// this is mostly used for presentation. business logic relies on DocumentID, which is derived from Title.
 	Title string
 	// Content is the literal content of the document
 	Content []byte
@@ -25,21 +27,25 @@ type IODocument struct {
 // NewIODocument creates a new IODocument with the given parsed template, title, and content.
 // It validates the provided template and document before returning.
 // Returns an error if validation fails.
-func NewIODocument(parsedTemplate *output_templates.ParsedTemplateFile, title string, content []byte) (*IODocument, error) {
+func NewIODocument(
+	parsedTemplate *output_templates.ParsedTemplateFile,
+	title string,
+	content []byte,
+) (*IODocument, error) {
 	if err := parsedTemplate.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid template. refusing IODocument: %w", err)
 	}
 
-	cd := &IODocument{
+	document := &IODocument{
 		Title:    title,
 		Template: parsedTemplate,
 		Content:  content,
 	}
-	if err := cd.Validate(); err != nil {
+	if err := document.Validate(); err != nil {
 		return nil, fmt.Errorf("refusing to create invalid document: %w", err)
 	}
 
-	return cd, nil
+	return document, nil
 }
 
 // Validate checks the properties of an IODocument, including title, content, and template metadata.
@@ -63,14 +69,17 @@ func (cd *IODocument) Validate() error {
 	}
 
 	// file name validations
-	// these are extreme edge-cases, as they're derived downstream from format and/or title, both of which have already been checked.
+	// these are extreme edge-cases, as they're derived downstream from format and/or title,
+	// both of which have already been checked.
 	{
 		if cd.DocumentID() == "" {
 			return globals.ValidationError("documentID", "can't create valid document id from title")
 		}
+
 		if cd.Template.Format.Extension() == "" {
 			return globals.ValidationError("extension", "can't create valid document extension")
 		}
+
 		if cd.Filename() == "" {
 			return globals.ValidationError("filename", "can't create valid document filename")
 		}
@@ -85,7 +94,7 @@ func (cd IODocument) Filename() string {
 	return cd.DocumentID() + "." + cd.Template.Format.Extension()
 }
 
-// DocumentID is a getter for the derived document id. returns the slugified title
+// DocumentID is a getter for the derived document id. returns the slugified title.
 func (cd IODocument) DocumentID() string {
 	return utils.Slugify(cd.Title)
 }
@@ -95,6 +104,7 @@ func (cd IODocument) DocumentID() string {
 // TODO: Ensure the method does not overwrite existing files.
 func (cd *IODocument) Write(inDir string) error {
 	var err error
+
 	if inDir == "" {
 		return globals.ValidationError("directory", "directory is empty")
 	}
@@ -106,14 +116,14 @@ func (cd *IODocument) Write(inDir string) error {
 
 	// make the file
 	// TODO: make sure this errors if the file already exists. don't want to force-replace existing files.
-	f, err := os.Create(path.Join(inDir, cd.Filename()))
+	file, err := os.Create(path.Join(inDir, cd.Filename()))
 	if err != nil {
 		return fmt.Errorf("could not create file %s: %w", cd.Filename(), err)
 	}
-	defer f.Close()
+	defer file.Close()
 
 	// write it
-	if _, err = f.Write(cd.Content); err != nil {
+	if _, err = file.Write(cd.Content); err != nil {
 		return fmt.Errorf("could not write to file %s: %w", cd.Filename(), err)
 	}
 

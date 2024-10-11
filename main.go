@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/therealkevinard/adr-er/commands"
-	"github.com/therealkevinard/adr-er/utils"
-	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"path"
+
+	"github.com/therealkevinard/adr-er/commands"
+	"github.com/therealkevinard/adr-er/utils"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -44,9 +45,13 @@ if provided:
 				Before: func(_ *cli.Context) error { return nil },
 				Action: func(ctx *cli.Context) error {
 					var (
-						outputDir            = ""    // root dir to write files into
-						userDefinedOutputDir = false // flag if the user provided the directory. this allows us to ignore some safeguards.
-						nextSequence         = 0     // next int sequence. when bootstrapping, this is detemined by regex-match on existing filenames in --dir
+						// root dir to write files into
+						outputDir string
+						// flag if the user provided the directory. this allows us to ignore some safeguards.
+						userDefinedOutputDir bool
+						// next int sequence.
+						// when bootstrapping, this is detemined by regex-match on existing filenames in --dir
+						nextSequence int
 					)
 
 					// user provided --dir flag
@@ -94,5 +99,4 @@ if provided:
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal("oops. app exited with an error:", err)
 	}
-
 }

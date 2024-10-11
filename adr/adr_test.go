@@ -2,18 +2,20 @@ package adr
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
-	"testing"
 )
 
 func TestBuildDocument(t *testing.T) {
-	defaultTemplate, err := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
-	require.NoError(t, err)
+	defaultTemplate, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+	require.NoError(t, tplErr)
 	require.NotNil(t, defaultTemplate)
 
+	//nolint:thelper // false positive. these aren't helpers, they _are_ the tests
 	tests := []struct {
 		name       string
 		adr        *ADR
@@ -54,7 +56,7 @@ func TestBuildDocument(t *testing.T) {
 					Content: []byte("content"),
 				})
 				assert.Nil(t, doc)
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				// assert against the returned descriptive error
 				var validationError globals.InputValidationError
@@ -62,7 +64,6 @@ func TestBuildDocument(t *testing.T) {
 				assert.True(t, ok)
 				assert.Equal(t, "format", validationError.Field)
 				assert.Equal(t, "unsupported format", validationError.Reason)
-
 			},
 		},
 	}

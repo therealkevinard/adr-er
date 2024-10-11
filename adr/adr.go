@@ -3,11 +3,16 @@ package adr
 import (
 	"bytes"
 	"fmt"
+	"strings"
+	"text/template"
+
 	io_document "github.com/therealkevinard/adr-er/io-document"
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
-	"strings"
-	"text/template"
+)
+
+const (
+	numericPadWidth = 4
 )
 
 // ADR represents an Architectural Decision Record (ADR).
@@ -39,7 +44,8 @@ func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFil
 // This is used for display purposes to distinguish between different ADRs.
 func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
-	docTitle.WriteString(utils.PadValue(adr.Sequence, 4))
+
+	docTitle.WriteString(utils.PadValue(adr.Sequence, numericPadWidth))
 	docTitle.WriteString(": ")
 	docTitle.WriteString(adr.Title)
 

@@ -2,17 +2,18 @@ package commands
 
 import (
 	"fmt"
+	"path/filepath"
+	"slices"
+
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/therealkevinard/adr-er/adr"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/theme"
+	"github.com/therealkevinard/adr-er/utils"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
-	"os"
-	"path/filepath"
-	"slices"
 )
 
 var _ CliCommand = (*Create)(nil)
@@ -33,6 +34,7 @@ func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *C
 		outputDir:            outputDir,
 		userDefinedOutputDir: userDefinedOutputDir,
 		nextSequence:         nextSequence,
+		outputStdOut:         false,
 	}
 	// set stdout flag
 	if slices.Contains([]string{"", "-", "/"}, cmd.outputDir) {
@@ -42,7 +44,8 @@ func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *C
 	return cmd
 }
 
-func (n Create) Action(ctx *cli.Context) error {
+//nolint:funlen // tui apps are long by nature
+func (n Create) Action(_ *cli.Context) error {
 	var err error
 
 	// form values
@@ -60,29 +63,13 @@ func (n Create) Action(ctx *cli.Context) error {
 	{
 		var confirmText string
 		if n.outputStdOut {
-			confirmText = fmt.Sprintf("this will flush to stderr")
+			confirmText = "this will flush to stderr"
 		} else {
-			// a simple inline to dompute a relative path. if it errors, just show the abs path
-			displayPath := func() string {
-				cwd, err := os.Getwd()
-				if err != nil {
-					return ""
-				}
-				rel, err := filepath.Rel(cwd, n.outputDir)
-				if err != nil {
-					return ""
-				}
-
-				return rel
-			}()
-
-			if displayPath == "" {
-				displayPath = n.outputDir
-			}
-
+			displayPath, _ := utils.DisplayShortpath(n.outputDir)
 			confirmText = fmt.Sprintf("this will create next sequence number %d \nin %s", n.nextSequence, displayPath)
 		}
 
+		//nolint:mnd // magic numbers are expected here
 		form := huh.NewForm(
 			huh.NewGroup(
 				// title
@@ -107,9 +94,7 @@ func (n Create) Action(ctx *cli.Context) error {
 				huh.NewSelect[string]().
 					Value(&record.Status).
 					Title("Status").
-					OptionsFunc(func() []huh.Option[string] {
-						return n.statusOptions()
-					}, nil).
+					OptionsFunc(n.statusOptions, nil).
 					Description("what's the current status?"),
 				// consequences
 				huh.NewText().
@@ -128,6 +113,7 @@ func (n Create) Action(ctx *cli.Context) error {
 		if err = form.Run(); err != nil {
 			return fmt.Errorf("error running form: %w", err)
 		}
+
 		if !confirmed {
 			theme.RenderCancelMessage()
 		}
@@ -135,9 +121,13 @@ func (n Create) Action(ctx *cli.Context) error {
 
 	// commit the input
 	{
-		var outputErr error // captures errors inside the spinner closure
-		var filename string // captures the document filename after it's built
-		var finalMsg string // captures a final message to the user. if writing to stdout, this is the ADR; for file output, it's a friendly status message
+		// captures errors inside the spinner closure
+		var outputErr error
+		// captures the document filename after it's built
+		var filename string
+		// captures a final message to the user.
+		// if writing to stdout, this is the ADR string; for file output, it's a friendly status message
+		var finalMsg string
 
 		// run load-compile-write under a spinner
 		_ = spinner.New().Title("saving the file").Action(func() {
@@ -145,6 +135,7 @@ func (n Create) Action(ctx *cli.Context) error {
 			tpl, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
 			if tplErr != nil {
 				outputErr = fmt.Errorf("error finding template: %w", tplErr)
+
 				return
 			}
 
@@ -152,6 +143,7 @@ func (n Create) Action(ctx *cli.Context) error {
 			document, buildErr := record.BuildDocument(tpl)
 			if buildErr != nil {
 				outputErr = fmt.Errorf("error rendering document: %w", buildErr)
+
 				return
 			}
 			filename = document.Filename()
@@ -160,11 +152,15 @@ func (n Create) Action(ctx *cli.Context) error {
 			if !n.outputStdOut {
 				if writeErr := document.Write(n.outputDir); writeErr != nil {
 					outputErr = fmt.Errorf("error writing document: %w", writeErr)
+
 					return
 				}
-				finalMsg = fmt.Sprintf("wrote ADR to %s", filename)
+
+				fullpath := filepath.Join(n.outputDir, filename)
+				displayPath, _ := utils.DisplayShortpath(fullpath)
+				finalMsg = fmt.Sprintf("wrote ADR to %s", displayPath)
 			} else {
-				finalMsg = fmt.Sprintf(string(document.Content))
+				finalMsg = string(document.Content)
 			}
 		}).Run()
 
@@ -175,9 +171,9 @@ func (n Create) Action(ctx *cli.Context) error {
 		// we need different styles if we're writing status vs flushing the whole document
 		// TODO: writing to stdout is a little awkward, still. refine that some other time.
 		if n.outputStdOut {
-			fmt.Printf(lipgloss.NewStyle().Render(finalMsg))
+			fmt.Print(lipgloss.NewStyle().Render(finalMsg))
 		} else {
-			fmt.Printf(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
+			fmt.Print(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
 		}
 	}
 

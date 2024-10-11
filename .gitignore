@@ -2,3 +2,6 @@
 __debug_bin*
 # the mailine binary
 adr-er
+
+# log files
+*.log 

@@ -35,7 +35,9 @@ const (
 	DocumentFormatMarkdown DocumentFormat = "markdown"
 )
 
-// supportedFormats registers a map of supported formats to their fs extension
+// supportedFormats registers a map of supported formats to their fs extension.
+//
+//nolint:gochecknoglobals // this is a package-internal global by design
 var supportedFormats = map[DocumentFormat]string{
 	DocumentFormatMarkdown: "md",
 }

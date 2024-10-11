@@ -2,20 +2,21 @@ package utils
 
 import (
 	"fmt"
-	"github.com/therealkevinard/adr-er/globals"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+
+	"github.com/therealkevinard/adr-er/globals"
 )
 
 // this regex will match existing ADR output files.
 // it follows the naming conventions outlined for output_templates.ParsedTemplateFile.
-// example matches: 0001-fizzy-pop.md, 0002-bubble-gupp.md, 0003-thing-two.txt
+// example matches: 0001-fizzy-pop.md, 0002-bubble-gupp.md, 0003-thing-two.txt.
 var adrFileNamePattern = regexp.MustCompile(`^(\d+)-.+\.\w+$`)
 
 // LocateADRDirectory attempts to locate the correct directory to store ADRs, starting at root
-// root defaults to os.Getwd if empty
+// root defaults to os.Getwd if empty.
 func LocateADRDirectory(root string) (string, error) {
 	// default to os.Getwd()
 	if root == "" {
@@ -38,25 +39,23 @@ func LocateADRDirectory(root string) (string, error) {
 	// evaluate each candidate directory. the first one that passes the rules is used
 	for _, dir := range candidates {
 		candidatePath := filepath.Join(root, dir)
-		ok, err := evaluateCandidate(candidatePath)
-		if err != nil {
-			continue
-		}
-		// this one wins
-		if ok {
+
+		// found a winner
+		if ok, err := evaluateCandidate(candidatePath); ok && err == nil {
 			return candidatePath, nil
 		}
 
 		continue
 	}
 
-	return "", fmt.Errorf("no ADR directory found in %s", root)
+	return "", globals.ValidationError("adrDirectory", fmt.Sprintf("no viable ADR directory found under %s", root))
 }
 
 // GetHighestSequenceNumber reads the filenames in root, extracting the ADR sequence number.
 // The highest existing value is returned.
 func GetHighestSequenceNumber(root string) (int, error) {
 	highest := 0
+
 	if root == "" {
 		return 0, globals.ValidationError("directory", "directory path is empty")
 	}
@@ -76,14 +75,15 @@ func GetHighestSequenceNumber(root string) (int, error) {
 
 		// search filename using the ADR convention match pattern
 		matches := adrFileNamePattern.FindStringSubmatch(entry.Name())
+		//nolint:mnd // not magic
 		if len(matches) < 2 {
 			continue // No match or no captured group.
 		}
 
 		// convert to int
-		sequence, err := strconv.Atoi(matches[1])
-		if err != nil {
-			return 0, fmt.Errorf("error parsing sequence number from %s: %w", entry.Name(), err)
+		sequence, convErr := strconv.Atoi(matches[1])
+		if convErr != nil {
+			return 0, fmt.Errorf("error parsing sequence number from %s: %w", entry.Name(), convErr)
 		}
 
 		// update highest, if higher.
@@ -93,7 +93,28 @@ func GetHighestSequenceNumber(root string) (int, error) {
 	}
 
 	return highest, nil
+}
 
+// DisplayShortpath creates a relative path from absolute.
+// this is used primarily for display, as absolute paths can _easily_ over-wrap.
+// for error cases, the absolute path is returned. this guarantees a usable return value.
+func DisplayShortpath(absolutePath string) (string, error) {
+	var (
+		cwd          string
+		relativePath string
+
+		err error
+	)
+
+	if cwd, err = os.Getwd(); err != nil {
+		return absolutePath, fmt.Errorf("error getting current working directory: %w", err)
+	}
+
+	if relativePath, err = filepath.Rel(cwd, absolutePath); err != nil {
+		return absolutePath, fmt.Errorf("error getting relative path: %w", err)
+	}
+
+	return "./" + relativePath, nil
 }
 
 // evaluateCandidate checks an os directory as a viable store for ADR files.
