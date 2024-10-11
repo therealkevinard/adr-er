@@ -7,5 +7,5 @@ import (
 // CliCommand exports an Action func that can be run in the tui.
 type CliCommand interface {
 	// Action satisfies
-	Action(cliCtx *cli.Context) error
+	Action(ctx *cli.Context) error
 }

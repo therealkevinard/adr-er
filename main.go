@@ -4,19 +4,41 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 
-	"github.com/therealkevinard/adr-er/commands"
+	"github.com/therealkevinard/adr-er/commands/create"
+	"github.com/therealkevinard/adr-er/commands/view"
 	"github.com/therealkevinard/adr-er/utils"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
+	var (
+		// root dir to write files into
+		adrDirectory string
+		// next int sequence. detemined by regex-match on existing filenames in --dir
+		nextSequence int
+	)
+
 	app := &cli.App{
 		Name:  "adr-er",
 		Usage: "a friendly little thing for managing architectural decision records",
-		// this is a good place to evaluate environment and set initial flags
-		Before: func(_ *cli.Context) error { return nil },
+		// evaluates environment, assigning adrDirectory and nextSequence
+		Before: func(ctx *cli.Context) error {
+			// TODO: these blocks can hold error-cases, but we need file logging to report them.
+
+			// determine correct output dir
+			// don't return on error, just use zero-value (will trigger stdout flag)
+			dir, _ := determineADRDirectory(ctx)
+			adrDirectory = dir
+
+			// determine next sequence number
+			// don't return on error, just increment from zero
+			seq, _ := utils.GetHighestSequenceNumber(adrDirectory)
+			nextSequence = seq + 1
+
+			return nil
+		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name: "dir",
@@ -41,56 +63,16 @@ if provided:
 				Aliases:     []string{"new"},
 				Usage:       "create a new adr document",
 				Description: "new is used to create a brand-spankin-new adr document",
-				// this is a good place to evaluate environment and set initial flags
-				Before: func(_ *cli.Context) error { return nil },
 				Action: func(ctx *cli.Context) error {
-					var (
-						// root dir to write files into
-						outputDir string
-						// flag if the user provided the directory. this allows us to ignore some safeguards.
-						userDefinedOutputDir bool
-						// next int sequence.
-						// when bootstrapping, this is detemined by regex-match on existing filenames in --dir
-						nextSequence int
-					)
-
-					// user provided --dir flag
-					if userDir := ctx.String("dir"); userDir != "" {
-						outputDir = userDir
-						userDefinedOutputDir = true
-					}
-					// if no user-provided --dir arg was supplied, attempt utils.LocateADRDirectory
-					if ctx.String("dir") == "" {
-						found, _ := utils.LocateADRDirectory("")
-						if found != "" {
-							outputDir = found // yay! use the one we found
-						} else {
-							outputDir = "-" // fallback to stdout
-						}
-					}
-
-					// for sout, we can finish early
-					if outputDir == "-" {
-						return commands.NewCreate(outputDir, userDefinedOutputDir, 0).Action(ctx)
-					}
-
-					// normalize absolute path
-					if !path.IsAbs(outputDir) {
-						cwd, _ := os.Getwd()
-						outputDir = path.Join(cwd, outputDir)
-					}
-					// check dir exists
-					_, err := os.Stat(outputDir)
-					if err != nil {
-						return fmt.Errorf("determined output directory %s is inaccessible: %w", outputDir, err)
-					}
-
-					// identify next sequence number
-					// TODO: this _can_ error, but we need file logging before we can report it
-					currentSequence, _ := utils.GetHighestSequenceNumber(outputDir)
-					nextSequence = currentSequence + 1
-
-					return commands.NewCreate(outputDir, userDefinedOutputDir, nextSequence).Action(ctx)
+					return create.NewCommand(adrDirectory, nextSequence).Action(ctx)
+				},
+			},
+			{
+				Name:        "view",
+				Usage:       "view existing ADR history",
+				Description: "runs a tui application for reading historical ADRs",
+				Action: func(ctx *cli.Context) error {
+					return view.NewCommand(adrDirectory).Action(ctx)
 				},
 			},
 		},
@@ -99,4 +81,35 @@ if provided:
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal("oops. app exited with an error:", err)
 	}
+}
+
+// determineADRDirectory determines the correct root/output directory for ADR files
+// returns the normalized absolute path.
+func determineADRDirectory(ctx *cli.Context) (string, error) {
+	var (
+		err       error  // an error
+		outputDir string // normalized dir
+		dir       string // intermediate dir var, from either flag or LocateADRDirectory
+	)
+
+	// init dir based on --dir flag: if provided, use it; if not use the conventions codified in utils.LocateADRDirectory
+	if userDir := ctx.String("dir"); userDir != "" {
+		dir = userDir
+	} else {
+		dir, err = utils.LocateADRDirectory("")
+		if err != nil {
+			return "", fmt.Errorf("error evaluating candidate directories: %w", err)
+		}
+	}
+
+	outputDir, err = filepath.Abs(dir)
+	if err != nil {
+		return "", fmt.Errorf("error normalizing path %s: %w", dir, err)
+	}
+
+	if _, err = os.Stat(outputDir); err != nil {
+		return "", fmt.Errorf("error accessing path %s: %w", outputDir, err)
+	}
+
+	return outputDir, nil
 }

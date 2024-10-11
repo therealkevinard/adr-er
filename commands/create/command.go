@@ -1,4 +1,4 @@
-package commands
+package create
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/therealkevinard/adr-er/adr"
+	"github.com/therealkevinard/adr-er/commands"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/utils"
@@ -16,27 +17,25 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var _ CliCommand = (*Create)(nil)
+var _ commands.CliCommand = (*Command)(nil)
 
-type Create struct {
+// Command wraps the cli command for creating new ADR documents.
+type Command struct {
 	// directory to write files into
 	outputDir string
 	// write to stdout, not file
 	outputStdOut bool
-	// user set output directory? false if we used LocateADRDirectory
-	userDefinedOutputDir bool
 	// the next integer sequence for the adrs in this directory
 	nextSequence int
 }
 
-func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *Create {
-	cmd := &Create{
-		outputDir:            outputDir,
-		userDefinedOutputDir: userDefinedOutputDir,
-		nextSequence:         nextSequence,
-		outputStdOut:         false,
+func NewCommand(outputDir string, nextSequence int) *Command {
+	cmd := &Command{
+		outputDir:    outputDir,
+		nextSequence: nextSequence,
+		outputStdOut: false,
 	}
-	// set stdout flag
+	// set stdout flag if outputDir is one of the magic strings
 	if slices.Contains([]string{"", "-", "/"}, cmd.outputDir) {
 		cmd.outputStdOut = true
 	}
@@ -45,7 +44,7 @@ func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *C
 }
 
 //nolint:funlen // tui apps are long by nature
-func (n Create) Action(_ *cli.Context) error {
+func (n Command) Action(_ *cli.Context) error {
 	var err error
 
 	// form values
@@ -182,7 +181,7 @@ func (n Create) Action(_ *cli.Context) error {
 
 // statusOptions returns valid options for status selection.
 // TODO: this is overkill rn, but the plan is for this func to read from an active ADR record and do things.
-func (n Create) statusOptions() []huh.Option[string] {
+func (n Command) statusOptions() []huh.Option[string] {
 	return []huh.Option[string]{
 		huh.NewOption("proposed", "proposed"),
 		huh.NewOption("accepted", "accepted"),

@@ -245,6 +245,11 @@ linters-settings:
     # Default: false
     all: true
 
+  varnamelen:
+    ignore-decls:
+      - w io.Writer
+      - err error
+
   wrapcheck:
     ignorePackageGlobs:
       - github.com/therealkevinard/adr-er/*
