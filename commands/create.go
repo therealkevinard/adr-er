@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/therealkevinard/adr-er/adr"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/theme"
+	"github.com/therealkevinard/adr-er/utils"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
 )
@@ -65,25 +65,7 @@ func (n Create) Action(ctx *cli.Context) error {
 		if n.outputStdOut {
 			confirmText = "this will flush to stderr"
 		} else {
-			// a simple inline to dompute a relative path. if it errors, just show the abs path
-			// TODO: this absolutely belongs in a util, and should also be used in the final message.
-			displayPath := func() string {
-				cwd, err := os.Getwd()
-				if err != nil {
-					return ""
-				}
-				rel, err := filepath.Rel(cwd, n.outputDir)
-				if err != nil {
-					return ""
-				}
-
-				return rel
-			}()
-
-			if displayPath == "" {
-				displayPath = n.outputDir
-			}
-
+			displayPath, _ := utils.DisplayShortpath(n.outputDir)
 			confirmText = fmt.Sprintf("this will create next sequence number %d \nin %s", n.nextSequence, displayPath)
 		}
 
@@ -168,7 +150,10 @@ func (n Create) Action(ctx *cli.Context) error {
 					outputErr = fmt.Errorf("error writing document: %w", writeErr)
 					return
 				}
-				finalMsg = fmt.Sprintf("wrote ADR to %s", filename)
+
+				fullpath := filepath.Join(n.outputDir, filename)
+				displayPath, _ := utils.DisplayShortpath(fullpath)
+				finalMsg = fmt.Sprintf("wrote ADR to %s", displayPath)
 			} else {
 				finalMsg = fmt.Sprint(string(document.Content))
 			}

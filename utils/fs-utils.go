@@ -96,6 +96,27 @@ func GetHighestSequenceNumber(root string) (int, error) {
 	return highest, nil
 }
 
+// DisplayShortpath creates a relative path from absolute.
+// this is used primarily for display, as absolute paths can _easily_ over-wrap.
+// for error cases, the absolute path is returned. this guarantees a usable return value.
+func DisplayShortpath(absolutePath string) (string, error) {
+	var (
+		cwd          string
+		relativePath string
+
+		err error
+	)
+
+	if cwd, err = os.Getwd(); err != nil {
+		return absolutePath, fmt.Errorf("error getting current working directory: %w", err)
+	}
+	if relativePath, err = filepath.Rel(cwd, absolutePath); err != nil {
+		return absolutePath, fmt.Errorf("error getting relative path: %w", err)
+	}
+
+	return "./" + relativePath, nil
+}
+
 // evaluateCandidate checks an os directory as a viable store for ADR files.
 // returns true if the directory is a valid candidate, otherwise false
 // a viable store must be either empty, or hold only ADR-named files. subdirectories are allowed.
