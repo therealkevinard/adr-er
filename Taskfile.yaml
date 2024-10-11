@@ -72,9 +72,9 @@ tasks:
     cmd: golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 {{.CLI_ARGS}} | tee lint.log
 
   lint:single:
-    desc: runs a single, specific linter [passes extra args]
+    desc: runs a single, specific linter, even if otherwise disabled [passes extra args]
     summary: |
-      runs golangci-lint with all disabled and config ignored, passing extra args to the --enable flag 
+      runs golangci-lint with all disabled and config ignored, passing extra args to the --enable-only flag 
       usage ex, report only the lll linter:  
         $ task lint:single -- lll
       usage ex, gci with fix mode: 
