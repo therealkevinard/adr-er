@@ -18,6 +18,7 @@ import (
 
 var _ CliCommand = (*Create)(nil)
 
+// Create wraps the cli command for creating new ADR documents.
 type Create struct {
 	// directory to write files into
 	outputDir string

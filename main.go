@@ -90,7 +90,20 @@ if provided:
 					currentSequence, _ := utils.GetHighestSequenceNumber(outputDir)
 					nextSequence = currentSequence + 1
 
-					return commands.NewCreate(outputDir, userDefinedOutputDir, nextSequence).Action(ctx)
+					createCommand := commands.NewCreate(outputDir, userDefinedOutputDir, nextSequence)
+
+					return createCommand.Action(ctx)
+				},
+			},
+			{
+				Name:        "view",
+				Usage:       "view existing ADR history",
+				Description: "runs a tui application for reading historical ADRs",
+				Action: func(ctx *cli.Context) error {
+					adrDir := "/Users/kard/Workspaces/github.com/therealkevinard/adr-er/architectural-decision-records"
+					viewCommand := commands.NewView(adrDir)
+
+					return viewCommand.Action(ctx)
 				},
 			},
 		},

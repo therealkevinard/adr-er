@@ -65,7 +65,7 @@ tasks:
   # brew install golangci-lint
   lint:fix:
     desc: runs some simple & safe & common linters in fix mode.
-    cmd: golangci-lint run --fix --enable-only goimports,gofumpt,gci
+    cmd: golangci-lint run --fix --enable-only goimports,gofumpt,gci,godot
 
   lint:report:
     desc: runs the common case of golangci-lint, captures lint.log [passes extra args]
