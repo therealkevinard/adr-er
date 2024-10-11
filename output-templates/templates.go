@@ -104,9 +104,10 @@ func parseTemplate(filename string) *ParsedTemplateFile {
 	}
 
 	parsed := &ParsedTemplateFile{
-		ID:     parts[0],
-		Format: DocumentFormat(parts[1]),
-		Name:   filename,
+		ID:      parts[0],
+		Format:  DocumentFormat(parts[1]),
+		Name:    filename,
+		Content: nil,
 	}
 
 	var err error

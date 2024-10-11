@@ -6,13 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
-	"github.com/therealkevinard/adr-er/output-templates"
+	output_templates "github.com/therealkevinard/adr-er/output-templates"
 )
 
 // TestConstructor guarantees the inline validation behavior of NewIODocument.
 func TestConstructor(t *testing.T) {
 	validTemplate := testGetDefaultTemplate(t)
 
+	//nolint:thelper // false positive. these aren't helpers, they _are_ the tests
 	tests := []struct {
 		name   string
 		assert func(t *testing.T)
@@ -21,7 +22,7 @@ func TestConstructor(t *testing.T) {
 			name: "happy path",
 			assert: func(t *testing.T) {
 				doc, err := NewIODocument(validTemplate, "title", []byte("content"))
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.NotNil(t, doc)
 			},
 		},
@@ -30,7 +31,7 @@ func TestConstructor(t *testing.T) {
 			assert: func(t *testing.T) {
 				doc, err := NewIODocument(validTemplate, "", []byte("content"))
 				assert.Nil(t, doc)
-				assert.NotNil(t, err)
+				assert.NoError(t, err)
 
 				var typedErr globals.InputValidationError
 				assert.ErrorAs(t, err, &typedErr)
@@ -68,6 +69,7 @@ func TestValidate(t *testing.T) {
 		}
 	}
 
+	//nolint:thelper // false positive. these aren't helpers, they _are_ the tests
 	tests := []struct {
 		name       string
 		document   IODocument

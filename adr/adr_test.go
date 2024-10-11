@@ -11,10 +11,11 @@ import (
 )
 
 func TestBuildDocument(t *testing.T) {
-	defaultTemplate, err := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
-	require.NoError(t, err)
+	defaultTemplate, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+	require.NoError(t, tplErr)
 	require.NotNil(t, defaultTemplate)
 
+	//nolint:thelper // false positive. these aren't helpers, they _are_ the tests
 	tests := []struct {
 		name       string
 		adr        *ADR

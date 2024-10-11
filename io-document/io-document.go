@@ -36,16 +36,16 @@ func NewIODocument(
 		return nil, fmt.Errorf("invalid template. refusing IODocument: %w", err)
 	}
 
-	cd := &IODocument{
+	document := &IODocument{
 		Title:    title,
 		Template: parsedTemplate,
 		Content:  content,
 	}
-	if err := cd.Validate(); err != nil {
+	if err := document.Validate(); err != nil {
 		return nil, fmt.Errorf("refusing to create invalid document: %w", err)
 	}
 
-	return cd, nil
+	return document, nil
 }
 
 // Validate checks the properties of an IODocument, including title, content, and template metadata.
@@ -113,14 +113,14 @@ func (cd *IODocument) Write(inDir string) error {
 
 	// make the file
 	// TODO: make sure this errors if the file already exists. don't want to force-replace existing files.
-	f, err := os.Create(path.Join(inDir, cd.Filename()))
+	file, err := os.Create(path.Join(inDir, cd.Filename()))
 	if err != nil {
 		return fmt.Errorf("could not create file %s: %w", cd.Filename(), err)
 	}
-	defer f.Close()
+	defer file.Close()
 
 	// write it
-	if _, err = f.Write(cd.Content); err != nil {
+	if _, err = file.Write(cd.Content); err != nil {
 		return fmt.Errorf("could not write to file %s: %w", cd.Filename(), err)
 	}
 

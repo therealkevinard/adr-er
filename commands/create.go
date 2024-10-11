@@ -30,11 +30,11 @@ type Create struct {
 }
 
 func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *Create {
-	//nolint:exhaustruct
 	cmd := &Create{
 		outputDir:            outputDir,
 		userDefinedOutputDir: userDefinedOutputDir,
 		nextSequence:         nextSequence,
+		outputStdOut:         false,
 	}
 	// set stdout flag
 	if slices.Contains([]string{"", "-", "/"}, cmd.outputDir) {
@@ -44,6 +44,7 @@ func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *C
 	return cmd
 }
 
+//nolint:funlen // tui apps are long by nature
 func (n Create) Action(ctx *cli.Context) error {
 	var err error
 
@@ -62,7 +63,7 @@ func (n Create) Action(ctx *cli.Context) error {
 	{
 		var confirmText string
 		if n.outputStdOut {
-			confirmText = fmt.Sprintf("this will flush to stderr")
+			confirmText = fmt.Sprint("this will flush to stderr")
 		} else {
 			// a simple inline to dompute a relative path. if it errors, just show the abs path
 			// TODO: this absolutely belongs in a util, and should also be used in the final message.
@@ -110,9 +111,7 @@ func (n Create) Action(ctx *cli.Context) error {
 				huh.NewSelect[string]().
 					Value(&record.Status).
 					Title("Status").
-					OptionsFunc(func() []huh.Option[string] {
-						return n.statusOptions()
-					}, nil).
+					OptionsFunc(n.statusOptions, nil).
 					Description("what's the current status?"),
 				// consequences
 				huh.NewText().
@@ -143,7 +142,7 @@ func (n Create) Action(ctx *cli.Context) error {
 		// captures the document filename after it's built
 		var filename string
 		// captures a final message to the user.
-		//if writing to stdout, this is the ADR string; for file output, it's a friendly status message
+		// if writing to stdout, this is the ADR string; for file output, it's a friendly status message
 		var finalMsg string
 
 		// run load-compile-write under a spinner

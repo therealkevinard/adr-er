@@ -1,3 +1,4 @@
+//nolint:gochecknoglobals // theme package is global by design
 package theme
 
 import (
@@ -41,7 +42,7 @@ var (
 // RenderTextBlock renders the provided strings as a line-delimited text block.
 func RenderTextBlock(lines ...string) {
 	block := lipgloss.JoinVertical(lipgloss.Left, lines...)
-	fmt.Printf(BlockMarginStyle().Render(block))
+	fmt.Print(BlockMarginStyle().Render(block))
 }
 
 // RenderCancelMessage writes the very common "cancelled" message to the user.
