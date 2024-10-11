@@ -9,6 +9,11 @@ vars: { }
 # innerloop dev: run, debug, test
 # code quality: cq, lint:single
 # commit hooks: pre-push
+#
+# depends on host binaries:
+# - go toolchain
+# - golangci-lint: https://github.com/golangci/golangci-lint
+# - vcr: https://github.com/charmbracelet/vhs
 tasks:
   #
   # dx targets. run, debug, etc

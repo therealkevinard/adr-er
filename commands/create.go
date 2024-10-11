@@ -90,17 +90,17 @@ func (n Create) Action(_ *cli.Context) error {
 					Value(&record.Decision).
 					Title("Decision").
 					Description("what did you folks decide to do"),
+				// consequences
+				huh.NewText().
+					Value(&record.Consequences).
+					Title("Consequences").
+					Description("what are the consequences of this decision?"),
 				// status
 				huh.NewSelect[string]().
 					Value(&record.Status).
 					Title("Status").
 					OptionsFunc(n.statusOptions, nil).
 					Description("what's the current status?"),
-				// consequences
-				huh.NewText().
-					Value(&record.Consequences).
-					Title("Consequences").
-					Description("what are the consequences of this decision?"),
 
 				// confirmation
 				huh.NewConfirm().

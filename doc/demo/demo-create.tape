@@ -63,16 +63,22 @@ Set Shell "bash"
 Set FontSize 14
 Set Width 800
 Set Height 1000
+Set TypingSpeed 100ms
 
-Type "./adr-er create" Enter@2
-Type "Use Thing Two" Tab@2
-Type "We've been using thing one, but it's very un-loveable" Tab@2
-Type "We've decided to use thing two instead." Tab@2
-Type@0.5 "/accep" Enter@2
-Type "We'll no longer use thing one" Tab@2
-Sleep 3
-Left@2 Enter@2
+Type "./adr-er create" Enter@2s
 
-Enter
-Type "cat ./architectural-decision-records/0002-use-thing-two.md" Enter@3
-Sleep 3
+Sleep 250ms Type "use thing two" Tab@1s
+
+Sleep 250ms Type "we use thing one today." Ctrl+j
+Sleep 250ms Type "no one _really_ loves it though." Tab@1s
+
+Sleep 250ms Type "we decided to use thing two instead." Tab@1s
+
+Sleep 250ms Type "we'll no longer use thing one moving forward. " Ctrl+j
+Sleep 250ms Type "it will still be supported for legacy stuff, but nothing greenfield." Tab@1s
+
+Sleep 250ms Down@1s 4 Type "/" Sleep 200ms Type@300ms "acc" Enter@1s
+Sleep 250ms Left@1s Enter
+
+Sleep 1s Type "cat ./architectural-decision-records/0002-use-thing-two.md" Enter
+Sleep 2s
