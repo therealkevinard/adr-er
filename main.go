@@ -46,12 +46,12 @@ if provided:
 				Action: func(ctx *cli.Context) error {
 					var (
 						// root dir to write files into
-						outputDir = ""
+						outputDir string
 						// flag if the user provided the directory. this allows us to ignore some safeguards.
-						userDefinedOutputDir = false
+						userDefinedOutputDir bool
 						// next int sequence.
 						// when bootstrapping, this is detemined by regex-match on existing filenames in --dir
-						nextSequence = 0
+						nextSequence int
 					)
 
 					// user provided --dir flag

@@ -45,7 +45,7 @@ func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *C
 }
 
 //nolint:funlen // tui apps are long by nature
-func (n Create) Action(ctx *cli.Context) error {
+func (n Create) Action(_ *cli.Context) error {
 	var err error
 
 	// form values
@@ -69,6 +69,7 @@ func (n Create) Action(ctx *cli.Context) error {
 			confirmText = fmt.Sprintf("this will create next sequence number %d \nin %s", n.nextSequence, displayPath)
 		}
 
+		//nolint:mnd // magic numbers are expected here
 		form := huh.NewForm(
 			huh.NewGroup(
 				// title
@@ -155,7 +156,7 @@ func (n Create) Action(ctx *cli.Context) error {
 				displayPath, _ := utils.DisplayShortpath(fullpath)
 				finalMsg = fmt.Sprintf("wrote ADR to %s", displayPath)
 			} else {
-				finalMsg = fmt.Sprint(string(document.Content))
+				finalMsg = string(document.Content)
 			}
 		}).Run()
 

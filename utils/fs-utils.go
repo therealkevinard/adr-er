@@ -77,14 +77,15 @@ func GetHighestSequenceNumber(root string) (int, error) {
 
 		// search filename using the ADR convention match pattern
 		matches := adrFileNamePattern.FindStringSubmatch(entry.Name())
+		//nolint:mnd // not magic
 		if len(matches) < 2 {
 			continue // No match or no captured group.
 		}
 
 		// convert to int
-		sequence, err := strconv.Atoi(matches[1])
-		if err != nil {
-			return 0, fmt.Errorf("error parsing sequence number from %s: %w", entry.Name(), err)
+		sequence, convErr := strconv.Atoi(matches[1])
+		if convErr != nil {
+			return 0, fmt.Errorf("error parsing sequence number from %s: %w", entry.Name(), convErr)
 		}
 
 		// update highest, if higher.

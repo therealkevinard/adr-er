@@ -56,7 +56,7 @@ func TestBuildDocument(t *testing.T) {
 					Content: []byte("content"),
 				})
 				assert.Nil(t, doc)
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				// assert against the returned descriptive error
 				var validationError globals.InputValidationError

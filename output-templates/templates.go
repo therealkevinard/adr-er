@@ -42,7 +42,7 @@ func ListTemplates() (map[string]*ParsedTemplateFile, error) {
 		index[tpl.Name()] = parsed
 	}
 
-	return index, err
+	return index, nil
 }
 
 // DefaultTemplateForFormat retrieves the default template for a given DocumentFormat.
@@ -99,6 +99,7 @@ func (t *ParsedTemplateFile) Validate() error {
 func parseTemplate(filename string) *ParsedTemplateFile {
 	parts := strings.Split(filename, ".")
 	// exactly 3 parts are expected
+	//nolint:mnd // this isn't magic, it's from the regex capture
 	if len(parts) != 3 {
 		return nil
 	}

@@ -22,7 +22,7 @@ func TestConstructor(t *testing.T) {
 			name: "happy path",
 			assert: func(t *testing.T) {
 				doc, err := NewIODocument(validTemplate, "title", []byte("content"))
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, doc)
 			},
 		},
@@ -31,10 +31,10 @@ func TestConstructor(t *testing.T) {
 			assert: func(t *testing.T) {
 				doc, err := NewIODocument(validTemplate, "", []byte("content"))
 				assert.Nil(t, doc)
-				assert.NoError(t, err)
+				require.Error(t, err)
 
 				var typedErr globals.InputValidationError
-				assert.ErrorAs(t, err, &typedErr)
+				require.ErrorAs(t, err, &typedErr)
 				assert.Equal(t, "title", typedErr.Field)
 				assert.Equal(t, "title is empty", typedErr.Reason)
 			},
@@ -44,10 +44,10 @@ func TestConstructor(t *testing.T) {
 			assert: func(t *testing.T) {
 				doc, err := NewIODocument(validTemplate, "title", []byte(""))
 				assert.Nil(t, doc)
-				assert.NotNil(t, err)
+				require.Error(t, err)
 
 				var typedErr globals.InputValidationError
-				assert.ErrorAs(t, err, &typedErr)
+				require.ErrorAs(t, err, &typedErr)
 				assert.Equal(t, "content", typedErr.Field)
 				assert.Equal(t, "content is empty", typedErr.Reason)
 			},
@@ -90,10 +90,10 @@ func TestValidate(t *testing.T) {
 				testGetDefaultTemplate(t),
 			),
 			assertFunc: func(t *testing.T, err error) {
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				var ive globals.InputValidationError
-				assert.ErrorAs(t, err, &ive)
+				require.ErrorAs(t, err, &ive)
 				assert.Equal(t, "title", ive.Field)
 				assert.Equal(t, "title is empty", ive.Reason)
 			},
@@ -106,10 +106,10 @@ func TestValidate(t *testing.T) {
 				testGetDefaultTemplate(t),
 			),
 			assertFunc: func(t *testing.T, err error) {
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				var ive globals.InputValidationError
-				assert.ErrorAs(t, err, &ive)
+				require.ErrorAs(t, err, &ive)
 				assert.Equal(t, "content", ive.Field)
 				assert.Equal(t, "content is empty", ive.Reason)
 			},
@@ -125,10 +125,10 @@ func TestValidate(t *testing.T) {
 				}),
 			),
 			assertFunc: func(t *testing.T, err error) {
-				assert.Error(t, err)
+				require.Error(t, err)
 
 				var ive globals.InputValidationError
-				assert.ErrorAs(t, err, &ive)
+				require.ErrorAs(t, err, &ive)
 				assert.Equal(t, "template", ive.Field)
 				assert.Equal(t, "invalid ouput format: format failed validation: unsupported format", ive.Reason)
 			},
