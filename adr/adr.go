@@ -11,6 +11,10 @@ import (
 	"github.com/therealkevinard/adr-er/utils"
 )
 
+const (
+	numericPadWidth = 4
+)
+
 // ADR represents an Architectural Decision Record (ADR).
 // It stores details about decisions made during software architecture design.
 type ADR struct {
@@ -40,7 +44,7 @@ func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFil
 // This is used for display purposes to distinguish between different ADRs.
 func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
-	docTitle.WriteString(utils.PadValue(adr.Sequence, 4))
+	docTitle.WriteString(utils.PadValue(adr.Sequence, numericPadWidth))
 	docTitle.WriteString(": ")
 	docTitle.WriteString(adr.Title)
 

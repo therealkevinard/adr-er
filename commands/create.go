@@ -63,7 +63,7 @@ func (n Create) Action(ctx *cli.Context) error {
 	{
 		var confirmText string
 		if n.outputStdOut {
-			confirmText = fmt.Sprint("this will flush to stderr")
+			confirmText = "this will flush to stderr"
 		} else {
 			// a simple inline to dompute a relative path. if it errors, just show the abs path
 			// TODO: this absolutely belongs in a util, and should also be used in the final message.
