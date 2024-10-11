@@ -3,11 +3,12 @@ package adr
 import (
 	"bytes"
 	"fmt"
+	"strings"
+	"text/template"
+
 	io_document "github.com/therealkevinard/adr-er/io-document"
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
-	"strings"
-	"text/template"
 )
 
 // ADR represents an Architectural Decision Record (ADR).

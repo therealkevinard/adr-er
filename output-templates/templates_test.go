@@ -1,10 +1,11 @@
 package output_templates
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // asserts fundamental behavior of ListTemplates, parseTemplate, and DefaultTemplateForFormat.

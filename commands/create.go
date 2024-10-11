@@ -2,6 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
@@ -10,9 +14,6 @@ import (
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
-	"os"
-	"path/filepath"
-	"slices"
 )
 
 var _ CliCommand = (*Create)(nil)
@@ -29,6 +30,7 @@ type Create struct {
 }
 
 func NewCreate(outputDir string, userDefinedOutputDir bool, nextSequence int) *Create {
+	//nolint:exhaustruct
 	cmd := &Create{
 		outputDir:            outputDir,
 		userDefinedOutputDir: userDefinedOutputDir,
@@ -63,6 +65,7 @@ func (n Create) Action(ctx *cli.Context) error {
 			confirmText = fmt.Sprintf("this will flush to stderr")
 		} else {
 			// a simple inline to dompute a relative path. if it errors, just show the abs path
+			// TODO: this absolutely belongs in a util, and should also be used in the final message.
 			displayPath := func() string {
 				cwd, err := os.Getwd()
 				if err != nil {
@@ -135,9 +138,13 @@ func (n Create) Action(ctx *cli.Context) error {
 
 	// commit the input
 	{
-		var outputErr error // captures errors inside the spinner closure
-		var filename string // captures the document filename after it's built
-		var finalMsg string // captures a final message to the user. if writing to stdout, this is the ADR; for file output, it's a friendly status message
+		// captures errors inside the spinner closure
+		var outputErr error
+		// captures the document filename after it's built
+		var filename string
+		// captures a final message to the user.
+		//if writing to stdout, this is the ADR string; for file output, it's a friendly status message
+		var finalMsg string
 
 		// run load-compile-write under a spinner
 		_ = spinner.New().Title("saving the file").Action(func() {
@@ -164,7 +171,7 @@ func (n Create) Action(ctx *cli.Context) error {
 				}
 				finalMsg = fmt.Sprintf("wrote ADR to %s", filename)
 			} else {
-				finalMsg = fmt.Sprintf(string(document.Content))
+				finalMsg = fmt.Sprint(string(document.Content))
 			}
 		}).Run()
 
@@ -175,9 +182,9 @@ func (n Create) Action(ctx *cli.Context) error {
 		// we need different styles if we're writing status vs flushing the whole document
 		// TODO: writing to stdout is a little awkward, still. refine that some other time.
 		if n.outputStdOut {
-			fmt.Printf(lipgloss.NewStyle().Render(finalMsg))
+			fmt.Print(lipgloss.NewStyle().Render(finalMsg))
 		} else {
-			fmt.Printf(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
+			fmt.Print(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
 		}
 	}
 

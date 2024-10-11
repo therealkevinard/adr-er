@@ -3,8 +3,9 @@ package output_templates
 import (
 	"embed"
 	"fmt"
-	"github.com/therealkevinard/adr-er/globals"
 	"strings"
+
+	"github.com/therealkevinard/adr-er/globals"
 )
 
 var _ globals.Validator = (*ParsedTemplateFile)(nil)

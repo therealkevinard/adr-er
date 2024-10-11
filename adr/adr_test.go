@@ -2,11 +2,12 @@ package adr
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
 	io_document "github.com/therealkevinard/adr-er/output-templates"
-	"testing"
 )
 
 func TestBuildDocument(t *testing.T) {
@@ -62,7 +63,6 @@ func TestBuildDocument(t *testing.T) {
 				assert.True(t, ok)
 				assert.Equal(t, "format", validationError.Field)
 				assert.Equal(t, "unsupported format", validationError.Reason)
-
 			},
 		},
 	}

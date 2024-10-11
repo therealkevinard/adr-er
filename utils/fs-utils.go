@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
-	"github.com/therealkevinard/adr-er/globals"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+
+	"github.com/therealkevinard/adr-er/globals"
 )
 
 // this regex will match existing ADR output files.
@@ -93,7 +94,6 @@ func GetHighestSequenceNumber(root string) (int, error) {
 	}
 
 	return highest, nil
-
 }
 
 // evaluateCandidate checks an os directory as a viable store for ADR files.

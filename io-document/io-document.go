@@ -2,11 +2,12 @@ package io_document
 
 import (
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/therealkevinard/adr-er/globals"
 	output_templates "github.com/therealkevinard/adr-er/output-templates"
 	"github.com/therealkevinard/adr-er/utils"
-	"os"
-	"path"
 )
 
 var _ globals.Validator = (*IODocument)(nil)
@@ -14,7 +15,8 @@ var _ globals.Validator = (*IODocument)(nil)
 // IODocument represents a document that is templated and prepared for filesystem operations.
 // It provides methods for validation, deriving filenames, and writing content to disk.
 type IODocument struct {
-	// Title is the document title. it's mostly used for presentation. business logic relies on DocumentID, which is derived from Title.
+	// Title is the document title.
+	// this is mostly used for presentation. business logic relies on DocumentID, which is derived from Title.
 	Title string
 	// Content is the literal content of the document
 	Content []byte
@@ -25,7 +27,11 @@ type IODocument struct {
 // NewIODocument creates a new IODocument with the given parsed template, title, and content.
 // It validates the provided template and document before returning.
 // Returns an error if validation fails.
-func NewIODocument(parsedTemplate *output_templates.ParsedTemplateFile, title string, content []byte) (*IODocument, error) {
+func NewIODocument(
+	parsedTemplate *output_templates.ParsedTemplateFile,
+	title string,
+	content []byte,
+) (*IODocument, error) {
 	if err := parsedTemplate.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid template. refusing IODocument: %w", err)
 	}
@@ -63,7 +69,8 @@ func (cd *IODocument) Validate() error {
 	}
 
 	// file name validations
-	// these are extreme edge-cases, as they're derived downstream from format and/or title, both of which have already been checked.
+	// these are extreme edge-cases, as they're derived downstream from format and/or title,
+	// both of which have already been checked.
 	{
 		if cd.DocumentID() == "" {
 			return globals.ValidationError("documentID", "can't create valid document id from title")

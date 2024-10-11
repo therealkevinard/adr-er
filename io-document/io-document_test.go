@@ -1,11 +1,12 @@
 package io_document
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
 	"github.com/therealkevinard/adr-er/output-templates"
-	"testing"
 )
 
 // TestConstructor guarantees the inline validation behavior of NewIODocument.
