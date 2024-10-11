@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// StrLenValidator returns a func that ensures a string's len is within range
+// StrLenValidator returns a func that ensures a string's len is within range.
 func StrLenValidator(fieldLabel string, min, max int) func(string) error {
 	return func(s string) error {
 		if len(s) < min {
@@ -19,7 +19,7 @@ func StrLenValidator(fieldLabel string, min, max int) func(string) error {
 	}
 }
 
-// Uint32Between returns a validation func that ensures a string is numeric and the num value is within range
+// Uint32Between returns a validation func that ensures a string is numeric and the num value is within range.
 func Uint32Between(fieldLabel string, min, max int) func(string) error {
 	return func(s string) error {
 		v, err := strconv.Atoi(s)

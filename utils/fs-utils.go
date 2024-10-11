@@ -11,11 +11,11 @@ import (
 
 // this regex will match existing ADR output files.
 // it follows the naming conventions outlined for output_templates.ParsedTemplateFile.
-// example matches: 0001-fizzy-pop.md, 0002-bubble-gupp.md, 0003-thing-two.txt
+// example matches: 0001-fizzy-pop.md, 0002-bubble-gupp.md, 0003-thing-two.txt.
 var adrFileNamePattern = regexp.MustCompile(`^(\d+)-.+\.\w+$`)
 
 // LocateADRDirectory attempts to locate the correct directory to store ADRs, starting at root
-// root defaults to os.Getwd if empty
+// root defaults to os.Getwd if empty.
 func LocateADRDirectory(root string) (string, error) {
 	// default to os.Getwd()
 	if root == "" {

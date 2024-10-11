@@ -85,7 +85,7 @@ func (cd IODocument) Filename() string {
 	return cd.DocumentID() + "." + cd.Template.Format.Extension()
 }
 
-// DocumentID is a getter for the derived document id. returns the slugified title
+// DocumentID is a getter for the derived document id. returns the slugified title.
 func (cd IODocument) DocumentID() string {
 	return utils.Slugify(cd.Title)
 }

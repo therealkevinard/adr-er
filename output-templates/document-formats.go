@@ -35,7 +35,7 @@ const (
 	DocumentFormatMarkdown DocumentFormat = "markdown"
 )
 
-// supportedFormats registers a map of supported formats to their fs extension
+// supportedFormats registers a map of supported formats to their fs extension.
 var supportedFormats = map[DocumentFormat]string{
 	DocumentFormatMarkdown: "md",
 }

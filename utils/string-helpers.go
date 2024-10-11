@@ -11,14 +11,14 @@ func PadValue(value, width int) string {
 	return fmt.Sprintf("%0*d", width, value)
 }
 
-// SlugifySlice is a variadic wrapper for Slugify. provided strings are joined, and the result is slugified
+// SlugifySlice is a variadic wrapper for Slugify. provided strings are joined, and the result is slugified.
 func SlugifySlice(parts ...string) string {
 	return Slugify(strings.Join(parts, "-"))
 }
 
 // Slugify converts a string into a normalized slug using several regex filters.
 // The resulting slug is suitable for file name and other keying use-cases.
-// TODO: with so many regexes, this func is a good candidate for fuzzing
+// TODO: with so many regexes, this func is a good candidate for fuzzing.
 func Slugify(input string) string {
 	if input == "" {
 		return input

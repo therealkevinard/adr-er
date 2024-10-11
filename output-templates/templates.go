@@ -64,7 +64,7 @@ func DefaultTemplateForFormat(format DocumentFormat) (*ParsedTemplateFile, error
 }
 
 // ParsedTemplateFile unpacks the name and format from the template filename and joins with its content.
-// once constructed, downstream business logic is entirely decoupled from the filesystem
+// once constructed, downstream business logic is entirely decoupled from the filesystem.
 type ParsedTemplateFile struct {
 	ID     string
 	Format DocumentFormat

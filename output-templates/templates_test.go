@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// asserts fundamental behavior of ListTemplates, parseTemplate, and DefaultTemplateForFormat
+// asserts fundamental behavior of ListTemplates, parseTemplate, and DefaultTemplateForFormat.
 func TestListTemplates(t *testing.T) {
 	tpls, err := ListTemplates()
 	require.NoError(t, err)
@@ -23,7 +23,7 @@ func TestListTemplates(t *testing.T) {
 	assert.Equal(t, "default", found.ID)
 }
 
-// ensures embed.FS contains only .tpl files (eg: no .go files)
+// ensures embed.FS contains only .tpl files (eg: no .go files).
 func TestListTemplates_OnlyTemplates(t *testing.T) {
 	tpls, err := ListTemplates()
 	require.NoError(t, err)

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// TestConstructor guarantees the inline validation behavior of NewIODocument
+// TestConstructor guarantees the inline validation behavior of NewIODocument.
 func TestConstructor(t *testing.T) {
 	validTemplate := testGetDefaultTemplate(t)
 
@@ -56,7 +56,7 @@ func TestConstructor(t *testing.T) {
 	}
 }
 
-// TestValidate covers the various validations within .Validate()
+// TestValidate covers the various validations within .Validate().
 func TestValidate(t *testing.T) {
 	// newDoc replicated NewIODocument, but without inline validation. this allows testing validation directly
 	newDoc := func(title string, content string, template *output_templates.ParsedTemplateFile) IODocument {
@@ -140,7 +140,7 @@ func TestValidate(t *testing.T) {
 	}
 }
 
-// testGetDefaultTemplate returns the default markdown template for testing purposes
+// testGetDefaultTemplate returns the default markdown template for testing purposes.
 func testGetDefaultTemplate(t *testing.T) *output_templates.ParsedTemplateFile {
 	t.Helper()
 
@@ -152,7 +152,7 @@ func testGetDefaultTemplate(t *testing.T) *output_templates.ParsedTemplateFile {
 }
 
 // testBreakValidTemplate supports testing invalid paths.
-// it loads a valid template, mutates it with breakFunc, and returns the now-invalid template
+// it loads a valid template, mutates it with breakFunc, and returns the now-invalid template.
 func testBreakValidTemplate(
 	t *testing.T,
 	breakFunc func(tpl *output_templates.ParsedTemplateFile) *output_templates.ParsedTemplateFile,
