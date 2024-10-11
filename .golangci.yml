@@ -1,28 +1,71 @@
-# This code is licensed under the terms of the MIT license https://opensource.org/license/mit
-# Copyright (c) 2021 Marat Reymers
+# linters index at https://golangci-lint.run/usage/linters/
+# all possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 
-## Golden config for golangci-lint v1.61.0
-#
-# This is the best config for golangci-lint based on my experience and opinion.
-# It is very strict, but not extremely strict.
-# Feel free to adapt and change it for your needs.
-
+# https://golangci-lint.run/usage/configuration/#run-configuration
 run:
-  # Timeout for analysis, e.g. 30s, 5m.
-  # Default: 1m
   timeout: 3m
+  concurrency: 6
 
+# https://golangci-lint.run/usage/configuration/#output-configuration
+output:
+  formats:
+    - { format: tab } # default colored-line-number
 
-# This file contains only configs which differ from defaults.
-# All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
+  show-stats: true
+  sort-results: true
+
+  # can be arranged at-will
+  sort-order:
+    - linter
+    - file
+    - severity
+
+# https://golangci-lint.run/usage/configuration/#issues-configuration
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0
+
+  exclude-rules:
+    - source: "(noinspection|TODO)"
+      linters: [ godot ]
+    - source: "//noinspection"
+      linters: [ gocritic ]
+
+    # caaaaalm down, man.
+    - text: "var-naming: don't use an underscore in package name"
+      linters: [ revive ]
+    - text: "ST1003: should not use underscores in package names"
+      linters: [ stylecheck ]
+
+    # early dev. there _will be_ todos
+    - text: "Line contains TODO/BUG/FIXME"
+      linters: [ godox ]
+
+    # allow fmt methods in tui code
+    - path: "commands/"
+      text: "use of `fmt\\..+` forbidden by pattern"
+    - path: "theme/"
+      text: "use of `fmt\\..+` forbidden by pattern"
+
+    # test exclusions
+    - path: "_test\\.go"
+      linters:
+        - bodyclose
+        - dupl
+        - funlen
+        - goconst
+        - gosec
+        - noctx
+        - wrapcheck
+        - exhaustruct
+
+# https://golangci-lint.run/usage/configuration/#severity-configuration
+severity: { }
+
+# https://golangci-lint.run/usage/linters/
 linters-settings:
   cyclop:
-    # The maximal code complexity to report.
-    # Default: 10
     max-complexity: 30
-    # The maximal average package complexity.
-    # If it's higher than 0.0 (float) the check is enabled
-    # Default: 0.0
     package-average: 10.0
 
   errcheck:
@@ -54,16 +97,10 @@ linters-settings:
       - "^os/exec.Cmd$"
       - "^reflect.StructField$"
       # public libs
-      - "^github.com/Shopify/sarama.Config$"
-      - "^github.com/Shopify/sarama.ProducerMessage$"
-      - "^github.com/mitchellh/mapstructure.DecoderConfig$"
-      - "^github.com/prometheus/client_golang/.+Opts$"
-      - "^github.com/spf13/cobra.Command$"
-      - "^github.com/spf13/cobra.CompletionOptions$"
+      - "^github.com/urfave/cli/v2.+$"
       - "^github.com/stretchr/testify/mock.Mock$"
       - "^github.com/testcontainers/testcontainers-go.+Request$"
       - "^github.com/testcontainers/testcontainers-go.FromDockerfile$"
-      - "^golang.org/x/tools/go/analysis.Analyzer$"
       - "^google.golang.org/protobuf/.+Options$"
       - "^gopkg.in/yaml.v3.Node$"
 
@@ -81,9 +118,7 @@ linters-settings:
     ignore-comments: true
 
   gocognit:
-    # Minimal code complexity to report.
-    # Default: 30 (but we recommend 10-20)
-    min-complexity: 20
+    min-complexity: 25
 
   gocritic:
     # Settings passed to gocritic.
@@ -98,6 +133,10 @@ linters-settings:
         # Whether to skip (*x).method() calls where x is a pointer receiver.
         # Default: true
         skipRecvDeref: false
+
+  gofumpt:
+    extra-rules: false
+    module-path: github.com/therealkevinard/adr-er
 
   gomodguard:
     blocked:
@@ -179,11 +218,8 @@ linters-settings:
     # Default: true
     strconcat: false
 
-  rowserrcheck:
-    # database/sql is always checked
-    # Default: []
-    packages:
-      - github.com/jmoiron/sqlx
+  predeclared:
+    ignore: min,max
 
   sloglint:
     # Enforce not using global loggers.
@@ -209,7 +245,11 @@ linters-settings:
     # Default: false
     all: true
 
+  wrapcheck:
+    ignorePackageGlobs:
+      - github.com/therealkevinard/adr-er/*
 
+# https://golangci-lint.run/usage/configuration/#linters-configuration
 linters:
   disable-all: true
   enable:
@@ -221,12 +261,13 @@ linters:
     - staticcheck # is a go vet on steroids, applying a ton of static analysis checks
     - typecheck # like the front-end of a Go compiler, parses and type-checks Go code
     - unused # checks for unused constants, variables, functions and types
+
     ## disabled by default
     - asasalint # checks for pass []any as any in variadic func(...any)
     - asciicheck # checks that your code does not contain non-ASCII identifiers
     - bidichk # checks for dangerous unicode character sequences
     - bodyclose # checks whether HTTP response body is closed successfully
-    #- canonicalheader # checks whether net/http.Header uses canonical header
+    - canonicalheader # checks whether net/http.Header uses canonical header
     - copyloopvar # detects places where loop variables are copied (Go 1.22+)
     - cyclop # checks function and package cyclomatic complexity
     - dupl # tool for code clone detection
@@ -234,7 +275,7 @@ linters:
     - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
     - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
     - exhaustive # checks exhaustiveness of enum switch statements
-    #- fatcontext # detects nested contexts in loops
+    - fatcontext # detects nested contexts in loops
     - forbidigo # forbids identifiers
     - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
@@ -256,7 +297,7 @@ linters:
     - loggercheck # checks key value pairs for common logger libraries (kitlog,klog,logr,zap)
     - makezero # finds slice declarations with non-zero initial length
     - mirror # reports wrong mirror patterns of bytes/strings usage
-    #- mnd # detects magic numbers
+    - mnd # detects magic numbers
     - musttag # enforces field tags in (un)marshaled structs
     - nakedret # finds naked returns in functions greater than a specified function length
     - nestif # reports deeply nested if statements
@@ -280,7 +321,7 @@ linters:
     - tenv # detects using os.Setenv instead of t.Setenv since Go1.17
     - testableexamples # checks if examples are testable (have an expected output)
     - testifylint # checks usage of github.com/stretchr/testify
-    - testpackage # makes you use a separate _test package
+    # - testpackage # makes you use a separate _test package.
     - tparallel # detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # removes unnecessary type conversions
     - unparam # reports unused function parameters
@@ -289,19 +330,19 @@ linters:
     - whitespace # detects leading and trailing whitespace
 
     ## you may want to enable
-    #- decorder # checks declaration order and count of types, constants, variables and functions
-    #- exhaustruct # [highly recommend to enable] checks if all structure fields are initialized
-    #- gci # controls golang package import order and makes it always deterministic
+    - decorder # checks declaration order and count of types, constants, variables and functions
+    - exhaustruct # [highly recommend to enable] checks if all structure fields are initialized
+    - gci # controls golang package import order and makes it always deterministic
     #- ginkgolinter # [if you use ginkgo/gomega] enforces standards of using ginkgo and gomega
-    #- godox # detects FIXME, TODO and other comment keywords
-    #- goheader # checks is file header matches to pattern
-    #- inamedparam # [great idea, but too strict, need to ignore a lot of cases by default] reports interfaces with unnamed method parameters
-    #- interfacebloat # checks the number of methods inside an interface
-    #- ireturn # accept interfaces, return concrete types
-    #- prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
-    #- tagalign # checks that struct tags are well aligned
-    #- varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
-    #- wrapcheck # checks that errors returned from external packages are wrapped
+    - godox # detects fixmes, todos, etc.
+    - goheader # checks is file header matches to pattern
+    - inamedparam # [great idea, but too strict, need to ignore a lot of cases by default] reports interfaces with unnamed method parameters
+    - interfacebloat # checks the number of methods inside an interface
+    - ireturn # accept interfaces, return concrete types
+    - prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
+    - tagalign # checks that struct tags are well aligned
+    - varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
+    - wrapcheck # checks that errors returned from external packages are wrapped
     #- zerologlint # detects the wrong usage of zerolog that a user forgets to dispatch zerolog.Event
 
     ## disabled
@@ -324,28 +365,6 @@ linters:
     #- misspell # [useless] finds commonly misspelled English words in comments
     #- nlreturn # [too strict and mostly code is not more readable] checks for a new line before return and branch statements to increase code clarity
     #- paralleltest # [too many false positives] detects missing usage of t.Parallel() method in your Go test
-    #- tagliatelle # checks the struct tags
-    #- thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
+    - tagliatelle # checks the struct tags
+    - thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
-
-
-issues:
-  # Maximum count of issues with the same text.
-  # Set to 0 to disable.
-  # Default: 3
-  max-same-issues: 50
-
-  exclude-rules:
-    - source: "(noinspection|TODO)"
-      linters: [ godot ]
-    - source: "//noinspection"
-      linters: [ gocritic ]
-    - path: "_test\\.go"
-      linters:
-        - bodyclose
-        - dupl
-        - funlen
-        - goconst
-        - gosec
-        - noctx
-        - wrapcheck

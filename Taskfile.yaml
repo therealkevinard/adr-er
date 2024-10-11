@@ -4,7 +4,14 @@ version: '3'
 
 vars: { }
 
+#
+# main tasks of interest
+# innerloop dev: run, debug, test
+# code quality: cq, lint:single
+# commit hooks: pre-push
 tasks:
+  #
+  # dx targets. run, debug, etc
   run:
     desc: run the app. passes extra arguments
     cmd: go run main.go {{.CLI_ARGS}}
@@ -18,36 +25,6 @@ tasks:
       dlv_port: '{{ .dlv_port | default 4300 }}'
     cmd: dlv debug --headless --listen=:{{.dlv_port}} --api-version=2 --accept-multiclient main.go -- {{.CLI_ARGS}}
 
-  build:
-    desc: builds the binary
-    cmd: go build -o adr-er main.go
-
-  pre-push:
-    desc: test/cq before pushing
-    cmds:
-      - task: cq
-      - task: test
-
-  cq:
-    desc: uber-common go cq commands
-    cmds:
-      - go mod tidy
-      - task: vet
-
-  lint:
-    desc: runs the common case of golangci-lint
-    cmd: golangci-lint run
-
-  lint:single:
-    desc: runs a single, specific linter
-    summary: |
-      runs golangci-lint with all disabled and config ignored, passing extra args to the --enable flag 
-      usage ex, run only the lll linter:  
-        $ task lint:single -- lll
-      usage ex, run godo with fix mode: 
-        $ task lint:single -- godot --fix
-    cmd: golangci-lint run --no-config --disable-all --enable {{.CLI_ARGS}}
-
   vet:
     desc: run go vet
     cmd: go vet ./...
@@ -56,6 +33,61 @@ tasks:
     desc: run unit tests
     cmd: go test ./...
 
+  build:
+    desc: builds the binary
+    cmd: go build -o adr-er main.go
+
+  #
+  # hooks
+  pre-push:
+    desc: test/cq before pushing
+    cmds:
+      - task: cq # hint: this one is _several_ commands
+      - task: test
+
+  #
+  # cq targets
+  cq:
+    desc: uber-common go cq commands
+    cmds:
+      - go mod tidy
+      - task: lint:fix
+      - task: lint:report
+      - task: vet
+
+  # doc: https://golangci-lint.run/
+  # gh: https://github.com/golangci/golangci-lint
+  # brew install golangci-lint
+  lint:fix:
+    desc: runs some simple & safe & common linters in fix mode.
+    cmd: golangci-lint run --fix --enable-only goimports,gofumpt,gci
+
+  lint:report:
+    desc: runs the common case of golangci-lint, captures lint.log [passes extra args]
+    summary: |
+      usage ex, lint specific files 
+        $ task lint -- main.go
+      usage ex, disable max issues (eg, for a big audit or ci job) 
+        $ task lint -- --max-issues-per-linter 0 --max-same-issues 0
+    cmd: golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 {{.CLI_ARGS}} | tee lint.log
+
+  lint:single:
+    desc: runs a single, specific linter [passes extra args]
+    summary: |
+      runs golangci-lint with all disabled and config ignored, passing extra args to the --enable flag 
+      usage ex, report only the lll linter:  
+        $ task lint:single -- lll
+      usage ex, gci with fix mode: 
+        $ task lint:single -- gci --fix
+      usage ex, comma-separated linters: 
+        $ task lint:single -- exhaustruct,gci
+    cmd: golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 --out-format tab --enable-only {{.CLI_ARGS}}
+
+  #
+  # docs' support
+
+  # https://github.com/charmbracelet/vhs
+  # brew install vhs
   demo:
     desc: updates the gif demo(s)
     cmds:
