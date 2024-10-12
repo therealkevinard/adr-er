@@ -11,11 +11,11 @@ import (
 // getFilesList reads a directory of files, returning []list.Item.
 // the returned sliced is suitable for pupulating the fileList model
 // TODO: this muddies concerns. should return a generic slice that fileList coerces to list.Item
-// TODO: this should leverage the regex file filter used elsewhere to only show ADR files (as determined by naming convention)
-func getFilesList(wd string) ([]list.Item, error) {
-	items, err := os.ReadDir(wd)
+// TODO: this should leverage the regex file filter used elsewhere to only show ADR files (per naming convention)
+func getFilesList(workDirectory string) ([]list.Item, error) {
+	items, err := os.ReadDir(workDirectory)
 	if err != nil {
-		return nil, fmt.Errorf("error reading dir %s: %w", wd, err)
+		return nil, fmt.Errorf("error reading dir %s: %w", workDirectory, err)
 	}
 
 	filesList := make([]list.Item, 0)
@@ -26,7 +26,7 @@ func getFilesList(wd string) ([]list.Item, error) {
 			continue
 		}
 
-		info, err := os.Stat(filepath.Join(wd, item.Name()))
+		info, err := os.Stat(filepath.Join(workDirectory, item.Name()))
 		// don't FileList unreadable files
 		if err != nil {
 			continue
@@ -34,7 +34,7 @@ func getFilesList(wd string) ([]list.Item, error) {
 
 		filesList = append(filesList, fileListItem{
 			name:     info.Name(),
-			parent:   wd,
+			parent:   workDirectory,
 			modified: info.ModTime(),
 		})
 	}
@@ -42,7 +42,7 @@ func getFilesList(wd string) ([]list.Item, error) {
 	return filesList, nil
 }
 
-// getFileContent reads <file>, returning its string content
+// getFileContent reads <file>, returning its string content.
 func getFileContent(file string) (string, error) {
 	content, err := os.ReadFile(file)
 	if err != nil {

@@ -29,20 +29,22 @@ func (v *Command) Action(_ *cli.Context) error {
 	}
 
 	// initialize the app models
-	rm, err := newRootModel(v.adrDir)
+	model, err := newRootModel(v.adrDir)
 	if err != nil {
 		return fmt.Errorf("error initializing tui: %w", err)
 	}
 
 	// run it
-	if _, err := tea.NewProgram(rm, options...).Run(); err != nil {
-		return fmt.Errorf("error runing tui: %w", err)
+	if _, runErr := tea.NewProgram(model, options...).Run(); runErr != nil {
+		return fmt.Errorf("error runing tui: %w", runErr)
 	}
 
 	return nil
 }
 
 // screenDims returns the terminal width and height.
+//
+//nolint:mnd // ui layout is all magic
 func screenDims() (int, int) {
 	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
@@ -53,6 +55,7 @@ func screenDims() (int, int) {
 	if width > 120 {
 		width = 120
 	}
+
 	if width < 80 {
 		width = 80
 	}
@@ -61,6 +64,7 @@ func screenDims() (int, int) {
 	if height > 120 {
 		height = 120
 	}
+
 	if height < 80 {
 		height = 80
 	}

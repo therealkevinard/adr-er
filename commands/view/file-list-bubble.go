@@ -9,19 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
-)
-
-var (
-	titleStyle    = lipgloss.NewStyle().MarginLeft(2)
-	helpStyle     = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle = lipgloss.NewStyle().Margin(1, 0, 2, 4)
-
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(2).PaddingBottom(1)
-	selectedItemStyle = itemStyle.Foreground(lipgloss.Color("170"))
-
-	paginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 )
 
 // the model...
@@ -31,43 +19,36 @@ type fileList struct {
 	quitting     bool
 }
 
-func newFileList(wd string) (fileList, error) {
-	const (
-		listWidth  = 20
-		listHeight = 14
-		panelTitle = "ADR Entries"
-	)
-
+func newFileList(workDirectory string) (fileList, error) {
 	// load ADR files from the working directory
-	filesListItems, err := getFilesList(wd)
+	filesListItems, err := getFilesList(workDirectory)
 	if err != nil {
 		return fileList{}, fmt.Errorf("error listing files: %w", err)
 	}
 
 	// build the anon-embed list.Model
-	l := list.New(filesListItems, fileItemDelegate{}, listWidth, listHeight)
-	l.Title = panelTitle
-	l.SetShowStatusBar(true)
-	l.SetFilteringEnabled(true)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
+	listModel := list.New(filesListItems, fileItemDelegate{}, listWidth, listHeight)
+	listModel.Title = "ADR Entries"
+	listModel.SetShowStatusBar(true)
+	listModel.SetFilteringEnabled(true)
+	listModel.Styles.Title = titleStyle
+	listModel.Styles.PaginationStyle = listPaginationStyle
+	listModel.Styles.HelpStyle = helpStyle
 
-	return fileList{
-		Model:        l,
-		selectedFile: fileListItem{},
-		quitting:     false,
-	}, nil
+	//nolint:exhaustruct
+	return fileList{Model: listModel}, nil
 }
 
 func (m fileList) Init() tea.Cmd { return nil }
 
+//nolint:ireturn // this is the way
 func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// handle screen size
 	case tea.WindowSizeMsg:
 		// TODO: actually, don't. this should be a fixed-width sidebar when we're done-done.
 		m.SetWidth(msg.Width)
+
 		return m, nil
 
 	// handle keys
@@ -75,6 +56,7 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "q", "ctrl+c":
 			m.quitting = true
+
 			return m, tea.Quit
 
 		case "enter":
@@ -82,12 +64,14 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if ok {
 				m.selectedFile = i
 			}
+
 			return m, nil
 		}
 	}
 
 	var cmd tea.Cmd
 	m.Model, cmd = m.Model.Update(msg)
+
 	return m, cmd
 }
 
@@ -100,7 +84,7 @@ type fileListItem struct {
 	modified time.Time
 }
 
-// FilterValue returns the value to reference when the list is in filter mode
+// FilterValue returns the value to reference when the list is in filter mode.
 func (i fileListItem) FilterValue() string { return i.name }
 
 // FullPath returns the absolute path to the file item.
@@ -113,25 +97,25 @@ type fileItemDelegate struct{}
 func (d fileItemDelegate) Height() int                             { return 1 }
 func (d fileItemDelegate) Spacing() int                            { return 0 }
 func (d fileItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
-func (d fileItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(fileListItem)
+func (d fileItemDelegate) Render(w io.Writer, listModel list.Model, index int, listItem list.Item) {
+	item, ok := listItem.(fileListItem)
 	if !ok {
 		return
 	}
 
 	//
 	str := fmt.Sprintf("%s\nmodified %s",
-		i.name,
-		humanize.RelTime(i.modified, time.Now(), "ago", "from now"),
+		item.name,
+		humanize.RelTime(item.modified, time.Now(), "ago", "from now"),
 	)
 
 	// default item renderer
-	renderFunc := itemStyle.Render
+	renderFunc := listItemStyle.Render
 
 	// selected item renderer
-	if index == m.Index() {
+	if index == listModel.Index() {
 		renderFunc = func(s ...string) string {
-			return selectedItemStyle.Render(strings.Join(s, " "))
+			return selectedListItemStyle.Render(strings.Join(s, " "))
 		}
 	}
 
