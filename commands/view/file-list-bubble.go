@@ -90,10 +90,10 @@ type fileListItem struct {
 	modified time.Time
 }
 
-// Title is used by list.DefaultDelegate
+// Title is used by list.DefaultDelegate.
 func (i fileListItem) Title() string { return i.name }
 
-// Description is used by list.DefaultDelegate
+// Description is used by list.DefaultDelegate.
 func (i fileListItem) Description() string {
 	return humanize.RelTime(i.modified, time.Now(), "ago", "from now")
 }

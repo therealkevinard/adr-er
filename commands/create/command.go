@@ -110,14 +110,14 @@ func (n Command) Action(_ *cli.Context) error {
 					Title("feeling good about this one?").
 					Description(confirmText),
 			).Title("The Decision"),
-		).WithTheme(theme.Theme())
+		).WithTheme(theme.ApplicationTheme().Theme)
 
 		if err = form.Run(); err != nil {
 			return fmt.Errorf("error running form: %w", err)
 		}
 
 		if !confirmed {
-			theme.RenderCancelMessage()
+			theme.ApplicationTheme().RenderCancelMessage()
 		}
 	}
 
@@ -175,7 +175,7 @@ func (n Command) Action(_ *cli.Context) error {
 		if n.outputStdOut {
 			fmt.Print(lipgloss.NewStyle().Render(finalMsg))
 		} else {
-			fmt.Print(theme.TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
+			fmt.Print(theme.ApplicationTheme().TitleStyle().Render(lipgloss.JoinVertical(lipgloss.Left, finalMsg)))
 		}
 	}
 
