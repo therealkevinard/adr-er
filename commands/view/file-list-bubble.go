@@ -2,13 +2,12 @@ package view
 
 import (
 	"fmt"
-	"io"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
 )
 
@@ -26,14 +25,15 @@ func newFileList(workDirectory string) (fileList, error) {
 		return fileList{}, fmt.Errorf("error listing files: %w", err)
 	}
 
-	// build the anon-embed list.Model
-	listModel := list.New(filesListItems, fileItemDelegate{}, listWidth, listHeight)
+	listModel := list.New(filesListItems, list.NewDefaultDelegate(), listWidth, listHeight)
 	listModel.Title = "ADR Entries"
 	listModel.SetShowStatusBar(true)
 	listModel.SetFilteringEnabled(true)
 	listModel.Styles.Title = titleStyle
-	listModel.Styles.PaginationStyle = listPaginationStyle
 	listModel.Styles.HelpStyle = helpStyle
+
+	listModel.Styles.PaginationStyle = listPaginationStyle
+	listModel.Paginator.PerPage = 10
 
 	//nolint:exhaustruct
 	return fileList{Model: listModel}, nil
@@ -46,8 +46,8 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	// handle screen size
 	case tea.WindowSizeMsg:
-		// TODO: actually, don't. this should be a fixed-width sidebar when we're done-done.
-		m.SetWidth(msg.Width)
+		m.SetWidth(listWidth)
+		m.SetHeight(msg.Height - 6)
 
 		return m, nil
 
@@ -75,7 +75,13 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m fileList) View() string { return m.Model.View() }
+func (m fileList) View() string {
+	style := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), true).
+		BorderForeground(colorPink).
+		Padding(1)
+	return style.Render(m.Model.View())
+}
 
 // ... and the FileList items ...
 type fileListItem struct {
@@ -84,40 +90,21 @@ type fileListItem struct {
 	modified time.Time
 }
 
+// Title is used by list.DefaultDelegate
+func (i fileListItem) Title() string { return i.name }
+
+// Description is used by list.DefaultDelegate
+func (i fileListItem) Description() string {
+	return humanize.RelTime(i.modified, time.Now(), "ago", "from now")
+}
+
 // FilterValue returns the value to reference when the list is in filter mode.
-func (i fileListItem) FilterValue() string { return i.name }
+func (i fileListItem) FilterValue() string {
+	return i.name
+}
 
 // FullPath returns the absolute path to the file item.
-// TODO: this is currently muy naive.
-func (i fileListItem) FullPath() string { return path.Join(i.parent, i.name) }
-
-// ... and their delegates ...
-type fileItemDelegate struct{}
-
-func (d fileItemDelegate) Height() int                             { return 1 }
-func (d fileItemDelegate) Spacing() int                            { return 0 }
-func (d fileItemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
-func (d fileItemDelegate) Render(w io.Writer, listModel list.Model, index int, listItem list.Item) {
-	item, ok := listItem.(fileListItem)
-	if !ok {
-		return
-	}
-
-	//
-	str := fmt.Sprintf("%s\nmodified %s",
-		item.name,
-		humanize.RelTime(item.modified, time.Now(), "ago", "from now"),
-	)
-
-	// default item renderer
-	renderFunc := listItemStyle.Render
-
-	// selected item renderer
-	if index == listModel.Index() {
-		renderFunc = func(s ...string) string {
-			return selectedListItemStyle.Render(strings.Join(s, " "))
-		}
-	}
-
-	fmt.Fprint(w, renderFunc(str))
+func (i fileListItem) FullPath() string {
+	// TODO: this is currently muy naive.
+	return path.Join(i.parent, i.name)
 }

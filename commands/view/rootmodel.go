@@ -8,21 +8,30 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// TODO: styles should share a framework with the create action.
+//
 //nolint:gochecknoglobals,mnd // global styles
 var (
-	titleStyle    = lipgloss.NewStyle().MarginLeft(2)
-	helpStyle     = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
-	quitTextStyle = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+	colorPink = lipgloss.Color("170")
 
-	listItemStyle         = lipgloss.NewStyle().PaddingLeft(2).PaddingBottom(1)
-	selectedListItemStyle = listItemStyle.Foreground(lipgloss.Color("170"))
+	titleStyle = lipgloss.NewStyle().
+			Foreground(colorPink)
+	helpStyle = list.DefaultStyles().HelpStyle.
+			Padding(1, 2)
+	quitTextStyle = lipgloss.NewStyle().
+			Margin(1, 2)
 
-	listPaginationStyle = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	listItemStyle = lipgloss.NewStyle().
+			Padding(1, 2, 0)
+	selectedListItemStyle = listItemStyle.
+				Foreground(colorPink)
+	listPaginationStyle = list.DefaultStyles().PaginationStyle.
+				PaddingLeft(4)
 )
 
 const (
-	listWidth  = 20
-	listHeight = 14
+	listWidth  = 32
+	listHeight = 0
 )
 
 type rootModel struct {
@@ -104,5 +113,5 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // The view function, which renders the UI.
 func (m rootModel) View() string {
-	return m.FileList.View() + "\n" + m.FileViewer.View()
+	return lipgloss.JoinHorizontal(lipgloss.Top, m.FileList.View(), m.FileViewer.View())
 }

@@ -2,6 +2,7 @@ package view
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type fileViewer struct {
@@ -20,7 +21,7 @@ func (m fileViewer) Show(content string) fileViewer {
 }
 
 //nolint:ireturn // this is the way
-func (m fileViewer) Update(_ tea.Msg) (tea.Model, tea.Cmd) {
+func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// TODO: handle updates. esp window resizing
 	return m, nil
 }
@@ -31,5 +32,7 @@ func (m fileViewer) View() string {
 		displayString = "<no content>"
 	}
 
-	return displayString
+	style := lipgloss.NewStyle().
+		Padding(1)
+	return style.Render(displayString)
 }
