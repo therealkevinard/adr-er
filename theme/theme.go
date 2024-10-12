@@ -4,6 +4,7 @@ package theme
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,13 +21,26 @@ var theme *Theme
 
 type Theme struct {
 	*huh.Theme
+	PrimaryColor          lipgloss.Color
+	ListItemStyle         lipgloss.Style
+	SelectedListItemStyle lipgloss.Style
+	ListPaginationStyle   lipgloss.Style
 }
 
 // ApplicationTheme returns the singular theme instance.
 func ApplicationTheme() *Theme {
 	if theme == nil {
+		primaryColor := lipgloss.Color("170")
+		liBaseStyle := lipgloss.NewStyle().Padding(1, 2, 0)
+
 		theme = &Theme{
-			Theme: huh.ThemeCharm(),
+			Theme:        huh.ThemeCharm(),
+			PrimaryColor: primaryColor,
+
+			// lists/items
+			ListItemStyle:         liBaseStyle,
+			SelectedListItemStyle: liBaseStyle.Foreground(primaryColor),
+			ListPaginationStyle:   list.DefaultStyles().PaginationStyle.PaddingLeft(4),
 		}
 
 		// resets/overrides

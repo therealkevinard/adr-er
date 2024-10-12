@@ -6,27 +6,27 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/therealkevinard/adr-er/theme"
 )
 
 // TODO: styles should share a framework with the create action.
 //
 //nolint:gochecknoglobals,mnd // global styles
 var (
-	colorPink = lipgloss.Color("170")
-
 	titleStyle = lipgloss.NewStyle().
-			Foreground(colorPink)
+			Foreground(theme.ApplicationTheme().PrimaryColor)
 	helpStyle = list.DefaultStyles().HelpStyle.
 			Padding(1, 2)
 	quitTextStyle = lipgloss.NewStyle().
 			Margin(1, 2)
 
-	listItemStyle = lipgloss.NewStyle().
-			Padding(1, 2, 0)
-	selectedListItemStyle = listItemStyle.
-				Foreground(colorPink)
-	listPaginationStyle = list.DefaultStyles().PaginationStyle.
-				PaddingLeft(4)
+	//
+	//listItemStyle = lipgloss.NewStyle().
+	//		Padding(1, 2, 0)
+	//selectedListItemStyle = listItemStyle.
+	//			Foreground(theme.ApplicationTheme().PrimaryColor)
+	//listPaginationStyle = list.DefaultStyles().PaginationStyle.
+	//			PaddingLeft(4)
 )
 
 const (

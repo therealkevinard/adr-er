@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
+	"github.com/therealkevinard/adr-er/theme"
 )
 
 // the model...
@@ -32,7 +33,7 @@ func newFileList(workDirectory string) (fileList, error) {
 	listModel.Styles.Title = titleStyle
 	listModel.Styles.HelpStyle = helpStyle
 
-	listModel.Styles.PaginationStyle = listPaginationStyle
+	listModel.Styles.PaginationStyle = theme.ApplicationTheme().ListPaginationStyle
 	listModel.Paginator.PerPage = 10
 
 	//nolint:exhaustruct
@@ -78,7 +79,7 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m fileList) View() string {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), true).
-		BorderForeground(colorPink).
+		BorderForeground(theme.ApplicationTheme().PrimaryColor).
 		Padding(1)
 	return style.Render(m.Model.View())
 }
