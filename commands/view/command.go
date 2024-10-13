@@ -2,12 +2,10 @@ package view
 
 import (
 	"fmt"
-	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/therealkevinard/adr-er/commands"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/term"
 )
 
 var _ commands.CliCommand = (*Command)(nil)
@@ -40,34 +38,4 @@ func (v *Command) Action(_ *cli.Context) error {
 	}
 
 	return nil
-}
-
-// screenDims returns the terminal width and height.
-//
-//nolint:mnd // ui layout is all magic
-func screenDims() (int, int) {
-	width, height, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		return 120, 80
-	}
-
-	// limit width
-	if width > 120 {
-		width = 120
-	}
-
-	if width < 80 {
-		width = 80
-	}
-
-	// limit height
-	if height > 120 {
-		height = 120
-	}
-
-	if height < 80 {
-		height = 80
-	}
-
-	return width, height
 }
