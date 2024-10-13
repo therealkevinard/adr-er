@@ -3,21 +3,34 @@ package view
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
+var _ tea.Model = (*rootModel)(nil)
+
+// layout constants
 const (
-	listWidth  = 32
-	listHeight = 0
+	// width of the sidebar files list
+	listWidth = 32
 )
 
+// rootKeyMap holds the keymap for rootmodel
+type rootKeyMap struct {
+	Quit key.Binding
+	Next key.Binding
+	Prev key.Binding
+}
+
+// rootModel is the outer tea.Model
 type rootModel struct {
 	FileList   fileList
 	FileViewer fileViewer
+	keymap     rootKeyMap
 
-	// presist the last/current opened file. this allows us to load content only when it's _actually_ changed.
-	prevSelectedFilename string
+	// tracks focusState state to support cycling child models
+	currentFocus focusState
 }
 
 func newRootModel(workDirectory string) (*rootModel, error) {
@@ -41,9 +54,20 @@ func newRootModel(workDirectory string) (*rootModel, error) {
 	}
 
 	return &rootModel{
-		FileList:             fl,
-		FileViewer:           fv,
-		prevSelectedFilename: "",
+		FileList:   fl,
+		FileViewer: fv,
+		keymap: rootKeyMap{
+			Quit: newKeyBinding(
+				[]string{"q", "ctrl+c"}, "q/ctrl+c", "quit application",
+			),
+			Next: newKeyBinding(
+				[]string{"right", "d", "tab"}, "→/d/tab", "next panel",
+			),
+			Prev: newKeyBinding(
+				[]string{"left", "a", "shift+tab"}, "←/a/shift+tab", "prev panel",
+			),
+		},
+		currentFocus: focusList,
 	}, nil
 }
 
@@ -58,35 +82,51 @@ func (m rootModel) Init() tea.Cmd {
 //
 //nolint:ireturn // this is the way
 func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var listCmd, viewCmd tea.Cmd
+	var cmds []tea.Cmd
 
-	// update filelist first
-	var flm tea.Model
-	flm, listCmd = m.FileList.Update(msg)
-	m.FileList = flm.(fileList) //nolint:errcheck // fileList.Update literally can't return anything other than a fileList
+	switch message := msg.(type) {
+	// check keys, rootmodel intercepts quit keys for tea.Quit
+	case tea.KeyMsg:
+		switch {
+		// quit command
+		case key.Matches(message, m.keymap.Quit):
+			return m, tea.Quit
 
-	// handle flm selection change.
-	if sel := m.FileList.selectedFile.FullPath(); sel != "" && sel != m.prevSelectedFilename {
-		// capture the selected file here to ref on later iterations
-		m.prevSelectedFilename = sel
+		// cycle next focusState
+		case key.Matches(message, m.keymap.Next):
+			m.currentFocus = m.currentFocus.Next(m.currentFocus)
 
-		// load the selected file content
-		content, err := getFileContent(sel)
-		if err != nil {
-			content = err.Error()
+		// cycle previous focusState
+		case key.Matches(message, m.keymap.Prev):
+			m.currentFocus = m.currentFocus.Prev(m.currentFocus)
 		}
-
-		// pass content to viewer for display
-		m.FileViewer = m.FileViewer.Show(content)
 	}
 
-	// update fileviewer
-	var fvm tea.Model
-	fvm, viewCmd = m.FileViewer.Update(msg)
-	//nolint:errcheck // fileViewer.Update literally can't return anything other than a fileViewer
-	m.FileViewer = fvm.(fileViewer)
+	// handle focusState change
+	switch m.currentFocus {
+	case focusList:
+		m.FileList = m.FileList.SetIsActive(true)
+		m.FileViewer = m.FileViewer.SetIsActive(false)
 
-	return m, tea.Batch(listCmd, viewCmd)
+	case focusViewer:
+		m.FileViewer = m.FileViewer.SetIsActive(true)
+		m.FileList = m.FileList.SetIsActive(false)
+	}
+
+	// update child/embedded tea.Models
+	{
+		// update filelist first, as the result may affect flows below here
+		flm, listCmd := m.FileList.Update(msg)
+		m.FileList = flm.(fileList) //nolint:errcheck // fileList.Update can only return fileList
+		cmds = append(cmds, listCmd)
+
+		// update fileviewer
+		fvm, viewCmd := m.FileViewer.Update(msg)
+		m.FileViewer = fvm.(fileViewer) //nolint:errcheck // fileViewer.Update can only return fileViewer
+		cmds = append(cmds, viewCmd)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 // The view function, which renders the UI.

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 )
 
@@ -50,4 +51,12 @@ func getFileContent(file string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+// newKeyBinding is a simple wrapper that creates a key.Binding from provided strokes and help input
+func newKeyBinding(strokes []string, helpKeys, helpDesc string) key.Binding {
+	return key.NewBinding(
+		key.WithKeys(strokes...),
+		key.WithHelp(helpKeys, helpDesc),
+	)
 }

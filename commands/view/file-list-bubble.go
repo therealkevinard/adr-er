@@ -5,6 +5,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -12,11 +13,20 @@ import (
 	"github.com/therealkevinard/adr-er/theme"
 )
 
-// the model...
+var _ tea.Model = (*fileList)(nil)
+
+type fileListKeyMap struct {
+	Up    key.Binding
+	Down  key.Binding
+	Enter key.Binding
+}
+
+// fileList is the file list view model
 type fileList struct {
 	list.Model
 	selectedFile fileListItem
-	quitting     bool
+	keymap       fileListKeyMap
+	active       bool
 }
 
 func newFileList(workDirectory string) (fileList, error) {
@@ -26,7 +36,7 @@ func newFileList(workDirectory string) (fileList, error) {
 		return fileList{}, fmt.Errorf("error listing files: %w", err)
 	}
 
-	listModel := list.New(filesListItems, list.NewDefaultDelegate(), listWidth, listHeight)
+	listModel := list.New(filesListItems, list.NewDefaultDelegate(), 0, 0)
 	listModel.Title = "ADR Entries"
 	listModel.SetShowStatusBar(true)
 	listModel.SetFilteringEnabled(true)
@@ -34,49 +44,77 @@ func newFileList(workDirectory string) (fileList, error) {
 	listModel.Styles.HelpStyle = theme.ApplicationTheme().HelpStyle()
 
 	//nolint:exhaustruct
-	return fileList{Model: listModel}, nil
+	return fileList{
+		Model: listModel,
+		keymap: fileListKeyMap{
+			Up: newKeyBinding(
+				[]string{"up", "w"}, "↑/w", "up",
+			),
+			Down: newKeyBinding(
+				[]string{"down", "s"}, "↓/s", "down",
+			),
+			Enter: newKeyBinding(
+				[]string{"enter"}, "↵/<enter>", "select",
+			),
+		},
+	}, nil
 }
 
 func (m fileList) Init() tea.Cmd { return nil }
 
 //nolint:ireturn // this is the way
 func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	// handle screen size
-	case tea.WindowSizeMsg:
-		m.SetWidth(listWidth)
-		m.SetHeight(msg.Height - 6)
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
 
-		return m, nil
+	// evaluate these only if this model has focusState
+	if m.active {
+		// update list.model before evaluating keys. we need its result for auto-load
+		m.Model, cmd = m.Model.Update(msg)
+		cmds = append(cmds, cmd)
 
-	// handle keys
-	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "q", "ctrl+c":
-			m.quitting = true
+		switch message := msg.(type) {
+		// handle keys
+		case tea.KeyMsg:
+			switch {
+			// autoload files when selection changes.
+			case key.Matches(message, m.keymap.Up), key.Matches(message, m.keymap.Down):
+				// fallthrough to load-on-enter case. using fallthrough here will simplify user toggles for this behavior
+				fallthrough
 
-			return m, tea.Quit
-
-		case "enter":
-			i, ok := m.SelectedItem().(fileListItem)
-			if ok {
-				m.selectedFile = i
+			// more conservative load-on-enter behavior
+			case key.Matches(message, m.keymap.Enter):
+				i, _ := m.SelectedItem().(fileListItem)
+				cmds = append(cmds, setFilenameCmd(i.FullPath()))
 			}
-
-			return m, nil
 		}
 	}
 
-	var cmd tea.Cmd
-	m.Model, cmd = m.Model.Update(msg)
+	// evaluate these regardless of focusState
+	switch message := msg.(type) {
+	// handle screen size
+	case tea.WindowSizeMsg:
+		m.SetWidth(listWidth)
+		m.SetHeight(message.Height - 4)
 
-	return m, cmd
+		cmds = append(cmds, nil)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m fileList) View() string {
-	style := theme.ApplicationTheme().Focused.Base.Border(lipgloss.NormalBorder(), true)
+	style := theme.ApplicationTheme().Focused.Base.Border(lipgloss.NormalBorder(), true).Padding(1)
 
 	return style.Render(m.Model.View())
+}
+
+// SetIsActive toggles active/focusState state for this model
+func (m fileList) SetIsActive(active bool) fileList {
+	m.active = active
+	return m
 }
 
 // ... and the FileList items ...
