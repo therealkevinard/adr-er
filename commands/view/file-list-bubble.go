@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
+	"github.com/therealkevinard/adr-er/theme"
 )
 
 // the model...
@@ -29,11 +30,8 @@ func newFileList(workDirectory string) (fileList, error) {
 	listModel.Title = "ADR Entries"
 	listModel.SetShowStatusBar(true)
 	listModel.SetFilteringEnabled(true)
-	listModel.Styles.Title = titleStyle
-	listModel.Styles.HelpStyle = helpStyle
-
-	listModel.Styles.PaginationStyle = listPaginationStyle
-	listModel.Paginator.PerPage = 10
+	listModel.Styles.Title = theme.ApplicationTheme().TitleStyle()
+	listModel.Styles.HelpStyle = theme.ApplicationTheme().HelpStyle()
 
 	//nolint:exhaustruct
 	return fileList{Model: listModel}, nil
@@ -76,10 +74,8 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m fileList) View() string {
-	style := lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder(), true).
-		BorderForeground(colorPink).
-		Padding(1)
+	style := theme.ApplicationTheme().Focused.Base.Border(lipgloss.NormalBorder(), true)
+
 	return style.Render(m.Model.View())
 }
 
@@ -90,10 +86,10 @@ type fileListItem struct {
 	modified time.Time
 }
 
-// Title is used by list.DefaultDelegate
+// Title is used by list.DefaultDelegate.
 func (i fileListItem) Title() string { return i.name }
 
-// Description is used by list.DefaultDelegate
+// Description is used by list.DefaultDelegate.
 func (i fileListItem) Description() string {
 	return humanize.RelTime(i.modified, time.Now(), "ago", "from now")
 }

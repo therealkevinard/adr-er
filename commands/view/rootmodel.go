@@ -3,30 +3,8 @@ package view
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-)
-
-// TODO: styles should share a framework with the create action.
-//
-//nolint:gochecknoglobals,mnd // global styles
-var (
-	colorPink = lipgloss.Color("170")
-
-	titleStyle = lipgloss.NewStyle().
-			Foreground(colorPink)
-	helpStyle = list.DefaultStyles().HelpStyle.
-			Padding(1, 2)
-	quitTextStyle = lipgloss.NewStyle().
-			Margin(1, 2)
-
-	listItemStyle = lipgloss.NewStyle().
-			Padding(1, 2, 0)
-	selectedListItemStyle = listItemStyle.
-				Foreground(colorPink)
-	listPaginationStyle = list.DefaultStyles().PaginationStyle.
-				PaddingLeft(4)
 )
 
 const (

@@ -21,7 +21,7 @@ func (m fileViewer) Show(content string) fileViewer {
 }
 
 //nolint:ireturn // this is the way
-func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m fileViewer) Update(_ tea.Msg) (tea.Model, tea.Cmd) {
 	// TODO: handle updates. esp window resizing
 	return m, nil
 }
@@ -32,7 +32,7 @@ func (m fileViewer) View() string {
 		displayString = "<no content>"
 	}
 
-	style := lipgloss.NewStyle().
-		Padding(1)
-	return style.Render(displayString)
+	return lipgloss.NewStyle().
+		Padding(1).
+		Render(displayString)
 }
