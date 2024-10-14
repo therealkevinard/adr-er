@@ -97,4 +97,6 @@ tasks:
     desc: updates the gif demo(s)
     cmds:
       - task: build
+      - go install .
       - vhs doc/demo/demo-create.tape
+      - vhs doc/demo/demo-view.tape

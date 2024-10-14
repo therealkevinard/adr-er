@@ -3,5 +3,10 @@ __debug_bin*
 # the mailine binary
 adr-er
 
+# bad example, but i can't dogfood yet - demo files aren't ready to commit.
+# in practice, ADRs should be tracked with the code.
+# TODO: when there are some valid ADRs in this repo, dogfood those for demos
+architectural-decision-records
+
 # log files
 *.log 

@@ -52,7 +52,9 @@ if empty:
   a) empty, or b) holds only adr files and optionally subdirectories.
 if provided:
   the application will not validate contents - we'll trust your judgement
-  the special value "-" can be used to indicate stdout  
+
+if something goes wrong: 
+in any case, files will be written to stdout if we have a meaningless/dangerous --dir (like /, literal "", or -)  
 `,
 				Aliases: []string{"d"},
 			},
@@ -60,7 +62,7 @@ if provided:
 		Commands: []*cli.Command{
 			{
 				Name:        "create",
-				Aliases:     []string{"new"},
+				Aliases:     []string{"c"},
 				Usage:       "create a new adr document",
 				Description: "new is used to create a brand-spankin-new adr document",
 				Action: func(ctx *cli.Context) error {
@@ -69,6 +71,7 @@ if provided:
 			},
 			{
 				Name:        "view",
+				Aliases:     []string{"v"},
 				Usage:       "view existing ADR history",
 				Description: "runs a tui application for reading historical ADRs",
 				Action: func(ctx *cli.Context) error {

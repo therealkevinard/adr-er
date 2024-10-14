@@ -57,7 +57,7 @@
 
 Output doc/demo/demo-create.gif
 
-Require ./adr-er
+Require adr-er
 
 Set Shell "bash"
 Set FontSize 14
@@ -65,7 +65,7 @@ Set Width 800
 Set Height 1000
 Set TypingSpeed 100ms
 
-Type "./adr-er create" Enter@2s
+Type "adr-er create" Enter@2s
 
 Sleep 250ms Type "use thing two" Tab@1s
 
@@ -80,5 +80,5 @@ Sleep 250ms Type "it will still be supported for legacy stuff, but nothing green
 Sleep 250ms Down@1s 4 Type "/" Sleep 200ms Type@300ms "acc" Enter@1s
 Sleep 250ms Left@1s Enter
 
-Sleep 1s Type "cat ./architectural-decision-records/0002-use-thing-two.md" Enter
+Sleep 1s Type "cat ./architectural-decision-records/0009-use-thing-two.md" Enter
 Sleep 2s
