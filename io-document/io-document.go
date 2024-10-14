@@ -6,7 +6,7 @@ import (
 	"path"
 
 	"github.com/therealkevinard/adr-er/globals"
-	output_templates "github.com/therealkevinard/adr-er/output-templates"
+	"github.com/therealkevinard/adr-er/render"
 	"github.com/therealkevinard/adr-er/utils"
 )
 
@@ -21,14 +21,14 @@ type IODocument struct {
 	// Content is the literal content of the document
 	Content []byte
 	// Template holds the parsed template, containing file metadata
-	Template *output_templates.ParsedTemplateFile
+	Template *render.ParsedTemplateFile
 }
 
 // NewIODocument creates a new IODocument with the given parsed template, title, and content.
 // It validates the provided template and document before returning.
 // Returns an error if validation fails.
 func NewIODocument(
-	parsedTemplate *output_templates.ParsedTemplateFile,
+	parsedTemplate *render.ParsedTemplateFile,
 	title string,
 	content []byte,
 ) (*IODocument, error) {

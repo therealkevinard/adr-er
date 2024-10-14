@@ -1,4 +1,4 @@
-package output_templates
+package render
 
 import (
 	"path"

@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
-	io_document "github.com/therealkevinard/adr-er/output-templates"
+	"github.com/therealkevinard/adr-er/render"
 )
 
 func TestBuildDocument(t *testing.T) {
-	defaultTemplate, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+	defaultTemplate, tplErr := render.DefaultTemplateForFormat(render.DocumentFormatMarkdown)
 	require.NoError(t, tplErr)
 	require.NotNil(t, defaultTemplate)
 
@@ -38,7 +38,7 @@ func TestBuildDocument(t *testing.T) {
 				assert.Equal(t, "0001: <title>", doc.Title)
 				assert.Equal(t, "0001-title", doc.DocumentID())
 				assert.Equal(t, "0001-title.md", doc.Filename())
-				assert.Equal(t, io_document.DocumentFormatMarkdown, doc.Template.Format)
+				assert.Equal(t, render.DocumentFormatMarkdown, doc.Template.Format)
 				assert.NotEmpty(t, doc.Content)
 			},
 		},
@@ -49,9 +49,9 @@ func TestBuildDocument(t *testing.T) {
 				Title:    "<title>",
 			},
 			assertFunc: func(t *testing.T, adr *ADR) {
-				doc, err := adr.BuildDocument(&io_document.ParsedTemplateFile{
+				doc, err := adr.BuildDocument(&render.ParsedTemplateFile{
 					ID:      "default",
-					Format:  io_document.DocumentFormat("invalid"),
+					Format:  render.DocumentFormat("invalid"),
 					Name:    "default.invalid.tpl",
 					Content: []byte("content"),
 				})

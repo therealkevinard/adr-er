@@ -6,13 +6,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/therealkevinard/adr-er/globals"
 	io_document "github.com/therealkevinard/adr-er/io-document"
-	output_templates "github.com/therealkevinard/adr-er/output-templates"
+	"github.com/therealkevinard/adr-er/render"
 	"github.com/therealkevinard/adr-er/utils"
-)
-
-const (
-	numericPadWidth = 4
 )
 
 // ADR represents an Architectural Decision Record (ADR).
@@ -29,7 +26,7 @@ type ADR struct {
 // BuildDocument creates an IODocument from the ADR using the provided template.
 // It renders the ADR content into the template and returns a document that can be written to disk.
 // Returns an error if rendering fails or if the template is invalid.
-func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFile) (*io_document.IODocument, error) {
+func (adr *ADR) BuildDocument(parsedTemplate *render.ParsedTemplateFile) (*io_document.IODocument, error) {
 	// render the document, capturing the content return
 	content, err := adr.render(parsedTemplate)
 	if err != nil {
@@ -45,7 +42,7 @@ func (adr *ADR) BuildDocument(parsedTemplate *output_templates.ParsedTemplateFil
 func (adr *ADR) SequencedTitle() string {
 	var docTitle strings.Builder
 
-	docTitle.WriteString(utils.PadValue(adr.Sequence, numericPadWidth))
+	docTitle.WriteString(utils.PadValue(adr.Sequence, globals.NumericPadWidth))
 	docTitle.WriteString(": ")
 	docTitle.WriteString(adr.Title)
 
@@ -54,7 +51,7 @@ func (adr *ADR) SequencedTitle() string {
 
 // render processes the ADR through the provided ParsedTemplateFile, generating the rendered content.
 // Returns the rendered content as a byte slice, or an error if the template is invalid or rendering fails.
-func (adr *ADR) render(parsedTemplate *output_templates.ParsedTemplateFile) ([]byte, error) {
+func (adr *ADR) render(parsedTemplate *render.ParsedTemplateFile) ([]byte, error) {
 	if err := parsedTemplate.Validate(); err != nil {
 		return nil, fmt.Errorf("refusing to render invalid template: %w", err)
 	}

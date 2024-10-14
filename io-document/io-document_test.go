@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/therealkevinard/adr-er/globals"
-	output_templates "github.com/therealkevinard/adr-er/output-templates"
+	"github.com/therealkevinard/adr-er/render"
 )
 
 // TestConstructor guarantees the inline validation behavior of NewIODocument.
@@ -61,7 +61,7 @@ func TestConstructor(t *testing.T) {
 // TestValidate covers the various validations within .Validate().
 func TestValidate(t *testing.T) {
 	// newDoc replicated NewIODocument, but without inline validation. this allows testing validation directly
-	newDoc := func(title string, content string, template *output_templates.ParsedTemplateFile) IODocument {
+	newDoc := func(title string, content string, template *render.ParsedTemplateFile) IODocument {
 		return IODocument{
 			Title:    title,
 			Content:  []byte(content),
@@ -119,8 +119,8 @@ func TestValidate(t *testing.T) {
 			document: newDoc(
 				"test document",
 				"test content",
-				testBreakValidTemplate(t, func(tpl *output_templates.ParsedTemplateFile) *output_templates.ParsedTemplateFile {
-					tpl.Format = output_templates.DocumentFormat("<invalid>")
+				testBreakValidTemplate(t, func(tpl *render.ParsedTemplateFile) *render.ParsedTemplateFile {
+					tpl.Format = render.DocumentFormat("<invalid>")
 
 					return tpl
 				}),
@@ -145,10 +145,10 @@ func TestValidate(t *testing.T) {
 }
 
 // testGetDefaultTemplate returns the default markdown template for testing purposes.
-func testGetDefaultTemplate(t *testing.T) *output_templates.ParsedTemplateFile {
+func testGetDefaultTemplate(t *testing.T) *render.ParsedTemplateFile {
 	t.Helper()
 
-	found, err := output_templates.DefaultTemplateForFormat(output_templates.DocumentFormatMarkdown)
+	found, err := render.DefaultTemplateForFormat(render.DocumentFormatMarkdown)
 	require.NoError(t, err)
 	require.NotNil(t, found)
 
@@ -159,8 +159,8 @@ func testGetDefaultTemplate(t *testing.T) *output_templates.ParsedTemplateFile {
 // it loads a valid template, mutates it with breakFunc, and returns the now-invalid template.
 func testBreakValidTemplate(
 	t *testing.T,
-	breakFunc func(tpl *output_templates.ParsedTemplateFile) *output_templates.ParsedTemplateFile,
-) *output_templates.ParsedTemplateFile {
+	breakFunc func(tpl *render.ParsedTemplateFile) *render.ParsedTemplateFile,
+) *render.ParsedTemplateFile {
 	t.Helper()
 
 	valid := testGetDefaultTemplate(t)
