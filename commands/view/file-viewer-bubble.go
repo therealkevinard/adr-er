@@ -49,7 +49,13 @@ func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := msg.(type) {
 	// handle window resize
 	case tea.WindowSizeMsg:
-		cmds = append(cmds, m.markdown.SetSize(message.Width-listWidth-4, message.Height))
+		// layout constants. space to subtract from full window size to account for sibling elems, margins, borders, etc
+		const (
+			hMinus = listWidth + 4
+			vMinus = 1
+		)
+
+		cmds = append(cmds, m.markdown.SetSize(message.Width-hMinus, message.Height-vMinus))
 
 	// update viewing file
 	case setFilenameMsg:

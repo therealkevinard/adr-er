@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -17,10 +18,22 @@ const (
 )
 
 // rootKeyMap holds the keymap for rootmodel
+// implements help.KeyMap for help panel support
 type rootKeyMap struct {
 	Quit key.Binding
 	Next key.Binding
 	Prev key.Binding
+}
+
+func (r rootKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{r.Next, r.Prev, r.Quit}
+}
+
+func (r rootKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		[]key.Binding{r.Next, r.Prev},
+		[]key.Binding{r.Quit},
+	}
 }
 
 // rootModel is the outer tea.Model
@@ -31,6 +44,13 @@ type rootModel struct {
 
 	// tracks focusState state to support cycling child models
 	currentFocus focusState
+
+	//
+	help help.Model
+
+	// track screen dimensions for layout reasons
+	screenW int
+	screenH int
 }
 
 func newRootModel(workDirectory string) (*rootModel, error) {
@@ -39,6 +59,7 @@ func newRootModel(workDirectory string) (*rootModel, error) {
 		err error
 		fl  fileList
 		fv  fileViewer
+		hv  help.Model
 	)
 
 	// init the fileList
@@ -53,21 +74,25 @@ func newRootModel(workDirectory string) (*rootModel, error) {
 		return nil, fmt.Errorf("error initializing fileviewer: %w", err)
 	}
 
+	// init help
+	hv = help.New()
+
 	return &rootModel{
-		FileList:   fl,
-		FileViewer: fv,
+		FileList:     fl,
+		FileViewer:   fv,
+		help:         hv,
+		currentFocus: focusList,
 		keymap: rootKeyMap{
 			Quit: newKeyBinding(
 				[]string{"q", "ctrl+c"}, "q/ctrl+c", "quit application",
 			),
 			Next: newKeyBinding(
-				[]string{"right", "d", "tab"}, "→/d/tab", "next panel",
+				[]string{"right", "tab"}, "→/tab", "next panel",
 			),
 			Prev: newKeyBinding(
-				[]string{"left", "a", "shift+tab"}, "←/a/shift+tab", "prev panel",
+				[]string{"left", "shift+tab"}, "←/shift+tab", "prev panel",
 			),
 		},
-		currentFocus: focusList,
 	}, nil
 }
 
@@ -100,9 +125,12 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(message, m.keymap.Prev):
 			m.currentFocus = m.currentFocus.Prev(m.currentFocus)
 		}
+
+	case tea.WindowSizeMsg:
+		m = m.SetScreenDimensions(message.Width, message.Height)
 	}
 
-	// handle focusState change
+	// update m.currentFocus
 	switch m.currentFocus {
 	case focusList:
 		m.FileList = m.FileList.SetIsActive(true)
@@ -131,5 +159,20 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // The view function, which renders the UI.
 func (m rootModel) View() string {
-	return lipgloss.JoinHorizontal(lipgloss.Top, m.FileList.View(), m.FileViewer.View())
+	mainView := lipgloss.JoinHorizontal(lipgloss.Bottom, m.FileList.View(), m.FileViewer.View())
+	helpView := lipgloss.NewStyle().Padding(0, 1).Render(m.help.View(m.keymap))
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		mainView,
+		helpView,
+	)
+}
+
+// SetScreenDimensions updates the outer screen dimensions
+func (m rootModel) SetScreenDimensions(width, height int) rootModel {
+	m.screenW = width
+	m.screenH = height
+
+	return m
 }

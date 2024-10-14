@@ -96,8 +96,14 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := msg.(type) {
 	// handle screen size
 	case tea.WindowSizeMsg:
-		m.SetWidth(listWidth)
-		m.SetHeight(message.Height - 4)
+		// layout constants. space to subtract from full window size to account for sibling elems, margins, borders, etc
+		const (
+			hMinus = 0
+			vMinus = 3
+		)
+
+		m.Model.SetWidth(listWidth - hMinus)
+		m.Model.SetHeight(message.Height - vMinus)
 
 		cmds = append(cmds, nil)
 	}
@@ -106,7 +112,15 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m fileList) View() string {
-	style := theme.ApplicationTheme().Focused.Base.Border(lipgloss.NormalBorder(), true).Padding(1)
+	focusedBorderColor := theme.ApplicationTheme().KeyColors[theme.ThemeColorIndigo]
+	style := lipgloss.NewStyle().BorderForeground(focusedBorderColor)
+
+	// toggle border visible based on active/focus state
+	if m.active {
+		style = style.BorderStyle(lipgloss.NormalBorder())
+	} else {
+		style = style.BorderStyle(lipgloss.HiddenBorder())
+	}
 
 	return style.Render(m.Model.View())
 }
