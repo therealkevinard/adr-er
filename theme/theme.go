@@ -10,30 +10,30 @@ import (
 )
 
 // theme is a read-only singular instance of the Theme used across the application.
-// consumers can use the ApplicationTheme getter to reference it, which will create on demand
+// consumers can use the ApplicationTheme getter to reference it, which will create on demand.
 var theme *Theme
 
-// ThemeColor is a typed map-key const used for Theme.KeyColors
-type ThemeColor string
+// ColorKey is a typed map-key const used for Theme.KeyColors.
+type ColorKey string
 
-// holds the valid ThemeColor constants
+// holds the valid ColorKey constants.
 const (
-	ThemeColorNormalFG ThemeColor = "color-normal-fg"
-	ThemeColorIndigo   ThemeColor = "color-indigo"
-	ThemeColorCream    ThemeColor = "color-cream"
-	ThemeColorFuchsia  ThemeColor = "color-fuchsia"
-	ThemeColorGreen    ThemeColor = "color-green"
-	ThemeColorRed      ThemeColor = "color-red"
+	ThemeColorNormalFG ColorKey = "color-normal-fg"
+	ThemeColorIndigo   ColorKey = "color-indigo"
+	ThemeColorCream    ColorKey = "color-cream"
+	ThemeColorFuchsia  ColorKey = "color-fuchsia"
+	ThemeColorGreen    ColorKey = "color-green"
+	ThemeColorRed      ColorKey = "color-red"
 )
 
 // Theme is an adr-er theme. it anon-embed a *huh.Theme, but also hoists key colors for ad-hoc use.
-// this is effectively a huh.Theme that also plays well with bubbletea/bubbles
+// this is effectively a huh.Theme that also plays well with bubbletea/bubbles.
 type Theme struct {
 	*huh.Theme
 	PrimaryColor lipgloss.TerminalColor
 	AccentColor  lipgloss.TerminalColor
 
-	KeyColors map[ThemeColor]lipgloss.TerminalColor
+	KeyColors map[ColorKey]lipgloss.TerminalColor
 }
 
 // ApplicationTheme returns the singular theme instance.
@@ -55,7 +55,7 @@ func ApplicationTheme() *Theme {
 			Theme:        huh.ThemeCharm(),
 			PrimaryColor: indigo,
 			AccentColor:  fuchsia,
-			KeyColors: map[ThemeColor]lipgloss.TerminalColor{
+			KeyColors: map[ColorKey]lipgloss.TerminalColor{
 				ThemeColorNormalFG: normalFg,
 				ThemeColorIndigo:   indigo,
 				ThemeColorCream:    cream,

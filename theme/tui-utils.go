@@ -19,7 +19,7 @@ func ScreenDimensions() (int, int) {
 		Mid(height, 80, 120)
 }
 
-// Mid is a tiny-tiny helper to return int value constrained by min and max
+// Mid is a tiny-tiny helper to return int value constrained by min and max.
 func Mid(value int, min, max int) int {
 	if value < min {
 		return min

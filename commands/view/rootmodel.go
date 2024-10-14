@@ -11,14 +11,14 @@ import (
 
 var _ tea.Model = (*rootModel)(nil)
 
-// layout constants
+// layout constants.
 const (
-	// width of the sidebar files list
+	// width of the sidebar files list.
 	listWidth = 32
 )
 
 // rootKeyMap holds the keymap for rootmodel
-// implements help.KeyMap for help panel support
+// implements help.KeyMap for help panel support.
 type rootKeyMap struct {
 	Quit key.Binding
 	Next key.Binding
@@ -31,12 +31,12 @@ func (r rootKeyMap) ShortHelp() []key.Binding {
 
 func (r rootKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		[]key.Binding{r.Next, r.Prev},
-		[]key.Binding{r.Quit},
+		{r.Next, r.Prev},
+		{r.Quit},
 	}
 }
 
-// rootModel is the outer tea.Model
+// rootModel is the outer tea.Model.
 type rootModel struct {
 	FileList   fileList
 	FileViewer fileViewer
@@ -69,10 +69,7 @@ func newRootModel(workDirectory string) (*rootModel, error) {
 	}
 
 	// init the viewer
-	fv, err = newFileViewer()
-	if err != nil {
-		return nil, fmt.Errorf("error initializing fileviewer: %w", err)
-	}
+	fv = newFileViewer()
 
 	// init help
 	hv = help.New()
@@ -82,6 +79,8 @@ func newRootModel(workDirectory string) (*rootModel, error) {
 		FileViewer:   fv,
 		help:         hv,
 		currentFocus: focusList,
+		screenW:      0,
+		screenH:      0,
 		keymap: rootKeyMap{
 			Quit: newKeyBinding(
 				[]string{"q", "ctrl+c"}, "q/ctrl+c", "quit application",
@@ -131,6 +130,7 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// update m.currentFocus
+	//nolint:exhaustive // iota case focusMax is computation-only
 	switch m.currentFocus {
 	case focusList:
 		m.FileList = m.FileList.SetIsActive(true)
@@ -145,13 +145,13 @@ func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	{
 		// update filelist first, as the result may affect flows below here
 		flm, listCmd := m.FileList.Update(msg)
-		m.FileList = flm.(fileList) //nolint:errcheck // fileList.Update can only return fileList
 		cmds = append(cmds, listCmd)
+		m.FileList = flm.(fileList) //nolint:errcheck // fileList.Update can only return fileList
 
 		// update fileviewer
 		fvm, viewCmd := m.FileViewer.Update(msg)
-		m.FileViewer = fvm.(fileViewer) //nolint:errcheck // fileViewer.Update can only return fileViewer
 		cmds = append(cmds, viewCmd)
+		m.FileViewer = fvm.(fileViewer) //nolint:errcheck // fileViewer.Update can only return fileViewer
 	}
 
 	return m, tea.Batch(cmds...)
@@ -169,7 +169,7 @@ func (m rootModel) View() string {
 	)
 }
 
-// SetScreenDimensions updates the outer screen dimensions
+// SetScreenDimensions updates the outer screen dimensions.
 func (m rootModel) SetScreenDimensions(width, height int) rootModel {
 	m.screenW = width
 	m.screenH = height

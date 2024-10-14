@@ -9,11 +9,11 @@ import (
 
 var _ tea.Model = (*fileViewer)(nil)
 
-// message types
+// message types.
 type setFilenameMsg string
 
-// setFilenameCmd emits a setFilenameMsg. this command is issued from other models that would like to update fileViewer
-var setFilenameCmd = func(filename string) tea.Cmd {
+// setFilenameCmd emits a setFilenameMsg. this command is issued from other models that would like to update fileViewer.
+func setFilenameCmd(filename string) tea.Cmd {
 	return func() tea.Msg {
 		return setFilenameMsg(filename)
 	}
@@ -26,7 +26,7 @@ type fileViewer struct {
 }
 
 //nolint:exhaustruct
-func newFileViewer() (fileViewer, error) {
+func newFileViewer() fileViewer {
 	indigo, ok := theme.ApplicationTheme().KeyColors[theme.ThemeColorIndigo].(lipgloss.AdaptiveColor)
 	if !ok {
 		indigo = lipgloss.AdaptiveColor{Light: "#5A56E0", Dark: "#7571F9"}
@@ -34,7 +34,7 @@ func newFileViewer() (fileViewer, error) {
 
 	return fileViewer{
 		markdown: markdown.New(false, true, indigo),
-	}, nil
+	}
 }
 
 func (m fileViewer) Init() tea.Cmd { return nil }
@@ -74,12 +74,12 @@ func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-// View returns the tui view for this model
+// View returns the tui view for this model.
 func (m fileViewer) View() string {
 	return m.markdown.View()
 }
 
-// SetIsActive toggles active/focusState state for this model
+// SetIsActive toggles active/focusState state for this model.
 func (m fileViewer) SetIsActive(active bool) fileViewer {
 	m.markdown.SetIsActive(active)
 	m.markdown.SetBorderless(!active)

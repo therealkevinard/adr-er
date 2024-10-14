@@ -21,7 +21,7 @@ type fileListKeyMap struct {
 	Enter key.Binding
 }
 
-// fileList is the file list view model
+// fileList is the file list view model.
 type fileList struct {
 	list.Model
 	selectedFile fileListItem
@@ -75,8 +75,9 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Model, cmd = m.Model.Update(msg)
 		cmds = append(cmds, cmd)
 
-		switch message := msg.(type) {
 		// handle keys
+		// nolint:gocritic // keeping singleCaseSwitch for convention
+		switch message := msg.(type) {
 		case tea.KeyMsg:
 			switch {
 			// autoload files when selection changes.
@@ -93,6 +94,7 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// evaluate these regardless of focusState
+	// nolint:gocritic // keeping singleCaseSwitch for convention
 	switch message := msg.(type) {
 	// handle screen size
 	case tea.WindowSizeMsg:
@@ -125,9 +127,10 @@ func (m fileList) View() string {
 	return style.Render(m.Model.View())
 }
 
-// SetIsActive toggles active/focusState state for this model
+// SetIsActive toggles active/focusState state for this model.
 func (m fileList) SetIsActive(active bool) fileList {
 	m.active = active
+
 	return m
 }
 

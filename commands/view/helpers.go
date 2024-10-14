@@ -27,9 +27,9 @@ func getFilesList(workDirectory string) ([]list.Item, error) {
 			continue
 		}
 
-		info, err := os.Stat(filepath.Join(workDirectory, item.Name()))
+		info, statErr := os.Stat(filepath.Join(workDirectory, item.Name()))
 		// don't FileList unreadable files
-		if err != nil {
+		if statErr != nil {
 			continue
 		}
 
@@ -53,7 +53,7 @@ func getFileContent(file string) (string, error) {
 	return string(content), nil
 }
 
-// newKeyBinding is a simple wrapper that creates a key.Binding from provided strokes and help input
+// newKeyBinding is a simple wrapper that creates a key.Binding from provided strokes and help input.
 func newKeyBinding(strokes []string, helpKeys, helpDesc string) key.Binding {
 	return key.NewBinding(
 		key.WithKeys(strokes...),
