@@ -1,46 +1,43 @@
-package view
+package file_viewer
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mistakenelf/teacup/markdown"
+	tui_commands "github.com/therealkevinard/adr-er/commands/view/tui-commands"
+	"github.com/therealkevinard/adr-er/globals"
 	"github.com/therealkevinard/adr-er/theme"
 )
 
-var _ tea.Model = (*fileViewer)(nil)
+var _ tea.Model = (*FileViewerModel)(nil)
 
-// message types.
-type setFilenameMsg string
-
-// setFilenameCmd emits a setFilenameMsg. this command is issued from other models that would like to update fileViewer.
-func setFilenameCmd(filename string) tea.Cmd {
-	return func() tea.Msg {
-		return setFilenameMsg(filename)
-	}
-}
-
-type fileViewer struct {
+// FileViewerModel is the file viewer model.
+// it renders a selected file's contents with pretty formatting.
+type FileViewerModel struct {
 	markdown markdown.Model
 	// presist the last/current opened file. this allows us to load content only when it's _actually_ changed.
 	prevSelectedFilename string
 }
 
-//nolint:exhaustruct
-func newFileViewer() fileViewer {
+func New() FileViewerModel {
 	indigo, ok := theme.ApplicationTheme().KeyColors[theme.ThemeColorIndigo].(lipgloss.AdaptiveColor)
 	if !ok {
 		indigo = lipgloss.AdaptiveColor{Light: "#5A56E0", Dark: "#7571F9"}
 	}
 
-	return fileViewer{
-		markdown: markdown.New(false, true, indigo),
+	return FileViewerModel{
+		markdown:             markdown.New(false, true, indigo),
+		prevSelectedFilename: "",
 	}
 }
 
-func (m fileViewer) Init() tea.Cmd { return nil }
+// Init ...
+func (m FileViewerModel) Init() tea.Cmd { return nil }
 
+// Update ...
+//
 //nolint:ireturn // this is the way
-func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m FileViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -51,14 +48,14 @@ func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		// layout constants. space to subtract from full window size to account for sibling elems, margins, borders, etc
 		const (
-			hMinus = listWidth + 4
+			hMinus = globals.ListModelWidth + 4
 			vMinus = 1
 		)
 
 		cmds = append(cmds, m.markdown.SetSize(message.Width-hMinus, message.Height-vMinus))
 
 	// update viewing file
-	case setFilenameMsg:
+	case tui_commands.SetFilenameMsg:
 		// only evaluate if there's a meaningful change.
 		if fname := string(message); fname != "" && fname != m.prevSelectedFilename {
 			m.prevSelectedFilename = fname
@@ -74,13 +71,13 @@ func (m fileViewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-// View returns the tui view for this model.
-func (m fileViewer) View() string {
+// View ...
+func (m FileViewerModel) View() string {
 	return m.markdown.View()
 }
 
 // SetIsActive toggles active/focusState state for this model.
-func (m fileViewer) SetIsActive(active bool) fileViewer {
+func (m FileViewerModel) SetIsActive(active bool) FileViewerModel {
 	m.markdown.SetIsActive(active)
 	m.markdown.SetBorderless(!active)
 

@@ -4,7 +4,7 @@
 
 this is a ~~super~~ pretty simple cli app for working with ADRs using [the Nygard format](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html).
 
-ADRs are stored in a local directory:
+ADRs are stored in a local directory that can/should be tracked along with the code:
 
 under the current working directory, the application will look for a viable
 directory named adr, .adr, or architectural-decision-records.
@@ -14,6 +14,13 @@ ADR naming convention. eg: `0003-security-audit.md`, `0007-team-expansion.md`, e
 its immediate files must be only ADRs.
 
 This mechanism is to prevent the app from writing markdown files into source-code directories
+
+### Install
+
+`go install github.com/therealkevinard/adr-er@latest` 
+
+TODO: github != gilab. learn GH actions for release 
+
 
 ### Creating an ADR
 

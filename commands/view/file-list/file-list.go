@@ -1,39 +1,36 @@
-package view
+package file_list
 
 import (
 	"fmt"
-	"path"
-	"time"
+	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dustin/go-humanize"
+	"github.com/therealkevinard/adr-er/commands"
+	tui_commands "github.com/therealkevinard/adr-er/commands/view/tui-commands"
+	"github.com/therealkevinard/adr-er/globals"
 	"github.com/therealkevinard/adr-er/theme"
 )
 
-var _ tea.Model = (*fileList)(nil)
+var _ tea.Model = (*FileListModel)(nil)
 
-type fileListKeyMap struct {
-	Up    key.Binding
-	Down  key.Binding
-	Enter key.Binding
-}
-
-// fileList is the file list view model.
-type fileList struct {
+// FileListModel is the file list view model.
+// It renders the list of files found in its bound workDirectory.
+type FileListModel struct {
 	list.Model
-	selectedFile fileListItem
-	keymap       fileListKeyMap
-	active       bool
+	active bool
+	keymap fileListKeyMap
 }
 
-func newFileList(workDirectory string) (fileList, error) {
+// New creates a new FileListModel, bound ot the provided workDirectory.
+func New(workDirectory string) (FileListModel, error) {
 	// load ADR files from the working directory
 	filesListItems, err := getFilesList(workDirectory)
 	if err != nil {
-		return fileList{}, fmt.Errorf("error listing files: %w", err)
+		return FileListModel{}, fmt.Errorf("error listing files: %w", err)
 	}
 
 	listModel := list.New(filesListItems, list.NewDefaultDelegate(), 0, 0)
@@ -43,27 +40,30 @@ func newFileList(workDirectory string) (fileList, error) {
 	listModel.Styles.Title = theme.ApplicationTheme().TitleStyle()
 	listModel.Styles.HelpStyle = theme.ApplicationTheme().HelpStyle()
 
-	//nolint:exhaustruct
-	return fileList{
-		Model: listModel,
+	return FileListModel{
+		Model:  listModel,
+		active: false,
 		keymap: fileListKeyMap{
-			Up: newKeyBinding(
+			Up: commands.NewKeybinding(
 				[]string{"up", "w"}, "↑/w", "up",
 			),
-			Down: newKeyBinding(
+			Down: commands.NewKeybinding(
 				[]string{"down", "s"}, "↓/s", "down",
 			),
-			Enter: newKeyBinding(
+			Enter: commands.NewKeybinding(
 				[]string{"enter"}, "↵/<enter>", "select",
 			),
 		},
 	}, nil
 }
 
-func (m fileList) Init() tea.Cmd { return nil }
+// Init ...
+func (m FileListModel) Init() tea.Cmd { return nil }
 
+// Update ...
+//
 //nolint:ireturn // this is the way
-func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m FileListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -76,7 +76,7 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 
 		// handle keys
-		// nolint:gocritic // keeping singleCaseSwitch for convention
+		//nolint:gocritic // keeping singleCaseSwitch for convention
 		switch message := msg.(type) {
 		case tea.KeyMsg:
 			switch {
@@ -87,14 +87,14 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// more conservative load-on-enter behavior
 			case key.Matches(message, m.keymap.Enter):
-				i, _ := m.SelectedItem().(fileListItem)
-				cmds = append(cmds, setFilenameCmd(i.FullPath()))
+				i, _ := m.SelectedItem().(Item)
+				cmds = append(cmds, tui_commands.SetFilenameCmd(i.FullPath()))
 			}
 		}
 	}
 
 	// evaluate these regardless of focusState
-	// nolint:gocritic // keeping singleCaseSwitch for convention
+	//nolint:gocritic // keeping singleCaseSwitch for convention
 	switch message := msg.(type) {
 	// handle screen size
 	case tea.WindowSizeMsg:
@@ -104,7 +104,7 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			vMinus = 3
 		)
 
-		m.Model.SetWidth(listWidth - hMinus)
+		m.Model.SetWidth(globals.ListModelWidth - hMinus)
 		m.Model.SetHeight(message.Height - vMinus)
 
 		cmds = append(cmds, nil)
@@ -113,7 +113,8 @@ func (m fileList) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m fileList) View() string {
+// View ...
+func (m FileListModel) View() string {
 	focusedBorderColor := theme.ApplicationTheme().KeyColors[theme.ThemeColorIndigo]
 	style := lipgloss.NewStyle().BorderForeground(focusedBorderColor)
 
@@ -128,34 +129,48 @@ func (m fileList) View() string {
 }
 
 // SetIsActive toggles active/focusState state for this model.
-func (m fileList) SetIsActive(active bool) fileList {
+func (m FileListModel) SetIsActive(active bool) FileListModel {
 	m.active = active
 
 	return m
 }
 
-// ... and the FileList items ...
-type fileListItem struct {
-	name     string
-	parent   string
-	modified time.Time
+// getFilesList reads a directory of files, returning []list.Item.
+// the returned sliced is suitable for pupulating the fileList model
+// TODO: this should leverage the regex file filter used elsewhere to only show ADR files (per naming convention)
+func getFilesList(workDirectory string) ([]list.Item, error) {
+	items, err := os.ReadDir(workDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("error reading dir %s: %w", workDirectory, err)
+	}
+
+	filesList := make([]list.Item, 0)
+
+	for _, item := range items {
+		// don't list dirs
+		if item.IsDir() {
+			continue
+		}
+
+		info, statErr := os.Stat(filepath.Join(workDirectory, item.Name()))
+		// don't FileList unreadable files
+		if statErr != nil {
+			continue
+		}
+
+		filesList = append(filesList, NewItem(
+			info.Name(),
+			workDirectory,
+			info.ModTime(),
+		))
+	}
+
+	return filesList, nil
 }
 
-// Title is used by list.DefaultDelegate.
-func (i fileListItem) Title() string { return i.name }
-
-// Description is used by list.DefaultDelegate.
-func (i fileListItem) Description() string {
-	return humanize.RelTime(i.modified, time.Now(), "ago", "from now")
-}
-
-// FilterValue returns the value to reference when the list is in filter mode.
-func (i fileListItem) FilterValue() string {
-	return i.name
-}
-
-// FullPath returns the absolute path to the file item.
-func (i fileListItem) FullPath() string {
-	// TODO: this is currently muy naive.
-	return path.Join(i.parent, i.name)
+// fileListKeyMap holds the keys this model responds to.
+type fileListKeyMap struct {
+	Up    key.Binding
+	Down  key.Binding
+	Enter key.Binding
 }

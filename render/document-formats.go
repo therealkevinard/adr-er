@@ -1,11 +1,10 @@
-package output_templates
+package render
 
 import "github.com/therealkevinard/adr-er/globals"
 
 var _ globals.Validator = (*DocumentFormat)(nil)
 
-// DocumentFormat defines a supported document format and provides methods for validation and retrieving file
-// extensions.
+// DocumentFormat is a supported document format. it provides methods for validation and retrieving file extensions.
 type DocumentFormat string
 
 // Validate checks if the DocumentFormat is supported.

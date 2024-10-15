@@ -10,10 +10,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/therealkevinard/adr-er/adr"
 	"github.com/therealkevinard/adr-er/commands"
-	io_document "github.com/therealkevinard/adr-er/output-templates"
+	"github.com/therealkevinard/adr-er/render"
 	"github.com/therealkevinard/adr-er/theme"
 	"github.com/therealkevinard/adr-er/utils"
-	"github.com/therealkevinard/adr-er/validators"
 	"github.com/urfave/cli/v2"
 )
 
@@ -29,6 +28,7 @@ type Command struct {
 	nextSequence int
 }
 
+// NewCommand is a constructor.
 func NewCommand(outputDir string, nextSequence int) *Command {
 	cmd := &Command{
 		outputDir:    outputDir,
@@ -78,7 +78,7 @@ func (n Command) Action(_ *cli.Context) error {
 					Description("name your decision").
 					CharLimit(128).
 					Inline(false).
-					Validate(validators.StrLenValidator("title", 3, 128)),
+					Validate(commands.StrLenValidator("title", 3, 128)),
 				// context
 				huh.NewText().
 					Value(&record.Context).
@@ -131,7 +131,7 @@ func (n Command) Action(_ *cli.Context) error {
 		// run load-compile-write under a spinner
 		_ = spinner.New().Title("saving the file").Action(func() {
 			// load the template
-			tpl, tplErr := io_document.DefaultTemplateForFormat(io_document.DocumentFormatMarkdown)
+			tpl, tplErr := render.DefaultTemplateForFormat(render.DocumentFormatMarkdown)
 			if tplErr != nil {
 				outputErr = fmt.Errorf("error finding template: %w", tplErr)
 
@@ -180,7 +180,7 @@ func (n Command) Action(_ *cli.Context) error {
 }
 
 // statusOptions returns valid options for status selection.
-// TODO: this is overkill rn, but the plan is for this func to read from an active ADR record and do things.
+// TODO: this is overkill rn. either deprecate or build against it.
 func (n Command) statusOptions() []huh.Option[string] {
 	return []huh.Option[string]{
 		huh.NewOption("proposed", "proposed"),

@@ -16,6 +16,7 @@ type Command struct {
 	adrDir string
 }
 
+// NewCommand is a constructor.
 func NewCommand(adrDir string) *Command {
 	return &Command{adrDir: adrDir}
 }
