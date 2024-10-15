@@ -84,7 +84,7 @@ func (m rootModel) Init() tea.Cmd {
 
 // The update function, which processes messages and updates the model.
 //
-//nolint:ireturn // this is the way
+//nolint:ireturn
 func (m rootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 

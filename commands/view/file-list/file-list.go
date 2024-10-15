@@ -62,7 +62,7 @@ func (m FileListModel) Init() tea.Cmd { return nil }
 
 // Update ...
 //
-//nolint:ireturn // this is the way
+//nolint:ireturn
 func (m FileListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
