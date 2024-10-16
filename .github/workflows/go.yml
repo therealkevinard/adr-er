@@ -1,7 +1,7 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: Go Release
 
 on:
   push:
@@ -45,3 +45,12 @@ jobs:
         with:
           name: test-results
           path: TestResults.json
+
+      #
+      # goreleaser
+      - name: Goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean --auto-snapshot
+
