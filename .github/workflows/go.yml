@@ -32,6 +32,11 @@ jobs:
       # build/test
       - name: Build
         run: go build -v -o adr-er main.go
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: adr-er binary
+          path: adr-er
 
       - name: Test
         run: go test -json ./... > TestResults.json
