@@ -31,7 +31,9 @@ jobs:
       # lint
       - name: Lint
         uses: golangci/golangci-lint-action@v6
-        with: { version: v1.60 }
+        with:
+          version: v1.61
+          args: '--max-issues-per-linter 0 --max-same-issues 0'
 
       #
       # build/test
