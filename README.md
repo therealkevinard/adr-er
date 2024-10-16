@@ -15,12 +15,18 @@ its immediate files must be only ADRs.
 
 This mechanism is to prevent the app from writing markdown files into source-code directories
 
-### Install
+## Install
 
+### From Releases 
+
+this repo publishes its release archives here https://github.com/therealkevinard/adr-er/releases.    
+download the relevant archive for your platform and extract the contained binary to your path. 
+
+#### From Source
 `go install github.com/therealkevinard/adr-er@latest` 
 
-TODO: github != gilab. learn GH actions for release 
 
+## Usage 
 
 ### Creating an ADR
 
