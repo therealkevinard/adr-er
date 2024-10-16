@@ -36,7 +36,7 @@ func (m FileViewerModel) Init() tea.Cmd { return nil }
 
 // Update ...
 //
-//nolint:ireturn // this is the way
+//nolint:ireturn
 func (m FileViewerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
