@@ -9,4 +9,6 @@ adr-er
 architectural-decision-records
 
 # log files
-*.log 
+*.log
+# goreleaser build dir
+dist/
