@@ -6,7 +6,8 @@ name: Lint and Test
 permissions: { contents: read }
 
 on:
-  workflow_dispatch: { } # allows manual runs
+  # allows manual runs
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:

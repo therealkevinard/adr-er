@@ -4,7 +4,8 @@
 name: Release Archives
 
 on:
-  workflow_dispatch: { } # allows manual runs
+  # allows manual runs
+  workflow_dispatch:
   tags: [ "v*" ] # triggers on v-tags
 
 permissions: { contents: write } # access perms for generated token
