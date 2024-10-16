@@ -2,6 +2,9 @@
 
 > a friendly little thing for managing architectural decision records
 
+[![GitHub Release](https://img.shields.io/github/v/release/therealkevinard/adr-er)](https://github.com/therealkevinard/adr-er/releases)
+
+
 this is a ~~super~~ pretty simple cli app for working with ADRs using [the Nygard format](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html).
 
 ADRs are stored in a local directory that can/should be tracked along with the code:

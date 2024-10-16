@@ -5,25 +5,20 @@ name: Lint and Test
 permissions: { contents: read }
 
 on:
-  workflow_dispatch: {} # allows manual runs
+  workflow_dispatch: { } # allows manual runs
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  validate:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      #
-      # setup
       - uses: actions/checkout@v4
       - name: Setup Go # hint: setup-go automatically caches deps, keyed on go.sum
         uses: actions/setup-go@v5
         with: { go-version: '1.22.x' }
-
-      #
-      # go deps
       - name: Install dependencies
         run: go get
 
@@ -35,14 +30,18 @@ jobs:
           version: v1.61
           args: '--max-issues-per-linter 0 --max-same-issues 0'
 
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go # hint: setup-go automatically caches deps, keyed on go.sum
+        uses: actions/setup-go@v5
+        with: { go-version: '1.22.x' }
+      - name: Install dependencies
+        run: go get
+
       #
-      # build/test
-      - name: Build
-        run: go build -v main.go
+      # test
       - name: Test
-        run: go test -json ./... > TestResults.json
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: TestResults.json
+        run: go test -json ./...
