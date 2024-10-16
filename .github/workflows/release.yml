@@ -1,46 +1,15 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go Release
+name: Release Archives
 
 on:
-  workflow_dispatch: {} # allows manual runs
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch: { } # allows manual runs
+  tags: [ "v*" ] # triggers on v-tags
 
-permissions:
-  contents: write
+permissions: { contents: write } # access perms for generated token
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      #
-      # setup
-      - uses: actions/checkout@v4
-      - name: Setup Go # hint: setup-go automatically caches deps, keyed on go.sum
-        uses: actions/setup-go@v5
-        with: { go-version: '1.22.x' }
-
-      #
-      # go deps
-      - name: Install dependencies
-        run: go get
-
-      #
-      # build/test
-      - name: Build
-        run: go build -v -o adr-er main.go
-      - name: Test
-        run: go test -json ./... > TestResults.json
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: TestResults.json
-
   #
   # goreleaser
   goreleaser:
@@ -50,18 +19,23 @@ jobs:
       #
       # setup
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: '1'
-          fetch-tags: 'true'
+        with: { fetch-depth: '1', fetch-tags: 'true' }
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with: { go-version: '1.22.x' }
 
       #
-      # go deps
+      # unit tests
       - name: Install dependencies
         run: go get
+      - name: Test
+        run: go test -json ./... > TestResults.json
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.json
 
       #
       # release

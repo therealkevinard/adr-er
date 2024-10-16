@@ -1,0 +1,47 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Lint and Test
+
+permissions: { contents: read }
+
+on:
+  workflow_dispatch: { } # allows manual runs
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      #
+      # setup
+      - uses: actions/checkout@v4
+      - name: Setup Go # hint: setup-go automatically caches deps, keyed on go.sum
+        uses: actions/setup-go@v5
+        with: { go-version: '1.22.x' }
+
+      #
+      # go deps
+      - name: Install dependencies
+        run: go get
+
+      #
+      # lint
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with: { version: v1.60 }
+
+      #
+      # build/test
+      - name: Build
+        run: go build -v main.go
+      - name: Test
+        run: go test -json ./... > TestResults.json
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.json
