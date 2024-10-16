@@ -43,6 +43,16 @@ tasks:
     cmd: go build -o adr-er main.go
 
   #
+  # goreleaser targets
+  release:build-local:
+    desc: goreleaser single-target build
+    cmd: goreleaser build --clean --single-target --auto-snapshot
+
+  release:release-snapshot:
+    desc: run a full goreleaser build
+    cmd: goreleaser release --clean --auto-snapshot
+
+  #
   # hooks
   pre-push:
     desc: test/cq before pushing
